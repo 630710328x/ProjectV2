@@ -67,27 +67,18 @@ try {
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="styles.css">
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <style>
-        .element {
-            -moz-user-select: none;       /* Firefox */
-            -webkit-user-select: none;    /* Safari, Chrome, Edge */
-            -ms-user-select: none;        /* IE 10+ */
-            user-select: none;            /* Standard syntax */
-        }
-        /* Your other CSS styles */
-    </style>
 </head>
 <body>
     <header>
         <nav>
             <ul>
-                <li><a href="index.php" class="element">Home</a></li>
-                <li><a href="family_tree.php" class="element">Family Tree</a></li>
+                <li><a href="index.php">Home</a></li>
+                <li><a href="family_tree.php">Family Tree</a></li>
             </ul>
         </nav>
     </header>
-    <div id="map" class="element"></div>
-    <form method="POST" action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>" class="element">
+    <div id="map"></div>
+    <form method="POST" action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>">
         <label for="year">Enter a year:</label>
         <input type="number" id="year" name="year" value="<?php echo isset($_POST['reset']) ? '' : (isset($_POST['year']) ? htmlspecialchars($_POST['year']) : ''); ?>">
         <label for="era">Select Era:</label>
@@ -101,36 +92,37 @@ try {
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
-        var map = L.map('map').setView([12.923828640427846, 100.8822441508516], 6);
-        L.tileLayer('https://api.maptiler.com/maps/streets-v2/{z}/{x}/{y}.png?key=Qy0caTTPn0K7S8WaoZ1d', {
-            attribution: '<a href="https://www.maptiler.com/copyright/" target="_blank">&copy; MapTiler</a> <a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>'
-        }).addTo(map);
+    var map = L.map('map').setView([12.923828640427846, 100.8822441508516], 6);
+    L.tileLayer('https://api.maptiler.com/maps/streets-v2/{z}/{x}/{y}.png?key=Qy0caTTPn0K7S8WaoZ1d', {
+        attribution: '<a href="https://www.maptiler.com/copyright/" target="_blank">&copy; MapTiler</a> <a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>'
+    }).addTo(map);
 
-        var locations = <?php echo $locationsJson; ?>;
-        
-        locations.forEach(function(location) {
-            // Validate latitude and longitude
-            if (location.latitude !== null && location.longitude !== null) {
-                var popupContent = `
-                    <div style="text-align: center;">
-                        <img src="${location.imgplace}" alt="${location.name}" style="width: 200px; height: auto; margin-bottom: 8px;">
-                        <p style="margin-top: 8px;">
-                            <a href="${location.url}" target="_blank">
-                                <img src="https://logoeps.com/wp-content/uploads/2014/05/49360-wikipedia-logo-icon-vector-icon-vector-eps.png" alt="Wikipedia" style="width: 30px; height: auto; margin-right: 0px;">
-                            </a>
-                        </p>
-                        <h3 style="margin-bottom: 8px;">${location.kingdomname}</h3>
-                        <p>${location.name}</p>
-                    </div>
-                `;
+    var locations = <?php echo $locationsJson; ?>;
+    
+    locations.forEach(function(location) {
+        // Validate latitude and longitude
+        if (location.latitude !== null && location.longitude !== null) {
+            var popupContent = `
+                <div style="text-align: center;">
+                    <img src="${location.imgplace}" alt="${location.name}" style="width: 200px; height: auto; margin-bottom: 8px;">
+                    <p style="margin-top: 8px;">
+                        <a href="${location.url}" target="_blank">
+                            <img src="https://logoeps.com/wp-content/uploads/2014/05/49360-wikipedia-logo-icon-vector-icon-vector-eps.png" alt="Wikipedia" style="width: 30px; height: auto; margin-right: 0px;">
+                        </a>
+                    </p>
+                    <h3 style="margin-bottom: 8px;">${location.kingdomname}</h3>
+                    <p>${location.name}</p>
+                </div>
+            `;
 
-                // Add marker to map
-                L.marker([location.latitude, location.longitude]).addTo(map)
-                .bindPopup(popupContent);
-            } else {
-                console.warn('Invalid location data:', location);
-            }
-        });
-    </script>
+            // Add marker to map
+            L.marker([location.latitude, location.longitude]).addTo(map)
+            .bindPopup(popupContent);
+        } else {
+            console.warn('Invalid location data:', location);
+        }
+    });
+</script>
+
 </body>
 </html>
