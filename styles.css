@@ -1,14 +1,15 @@
 /* styles.css */
 
 #map {
-    height: 800px;
+    height: 900px;
+    position: relative; /* To position the form container within the map */
 }
 
 .oval-button {
     background-color: #fdfdfd; /* White background */
     border: 2px solid #000000; /* Black border */
     color: black; /* Black text */
-    padding: 10px 20px; /* Some padding */
+    padding: 5px 10px; /* Some padding */
     text-align: center; /* Centered text */
     text-decoration: none; /* Remove underline */
     display: inline-block; /* Inline block */
@@ -23,14 +24,13 @@
     background-color: #dddddd; /* Grey background on hover */
 }
 
-
 body {
     font-family: Arial, sans-serif;
 }
 
 #tree {
     width: 100%;
-    height: 95vh;
+    height: 89vh;
     border: 1px solid #ccc;
 }
 
@@ -38,43 +38,65 @@ body {
     margin: 10px;
 }
 
+header {
+    background-color: #d0c18c; /* Match the header background color */
+    padding: 10px 20px; /* Add padding to the header */
+    display: flex; /* Use flexbox for header layout */
+    justify-content: space-between; /* Space out title and nav links */
+    align-items: center; /* Center align items vertically */
+}
+
 header nav ul {
     list-style-type: none;
     padding: 0;
     display: flex;
-    gap: 10px;
+    gap: 15px;
+    margin: 0; /* Remove default margin */
 }
 
 header nav ul li {
-    display: inline;
+    display: inline-block;
 }
 
 header nav ul li a {
     text-decoration: none;
-    padding: 5px 10px;
-    background-color: #ccc;
-    border: 1px solid #999;
-    border-radius: 5px;
+    padding: 10px 0; /* Padding for better spacing */
+    color: #000; /* Black text */
+    font-size: 16px; /* Font size */
+    font-weight: bold; /* Bold text for better visibility */
+    transition: color 0.3s, text-decoration 0.3s; /* Smooth transition for hover effect */
 }
 
 header nav ul li a:hover {
-    background-color: #bbb;
+    color: #444; /* Darker grey text on hover */
+    text-decoration: underline; /* Underline text on hover */
 }
 
-/* Additional styles for node images */
+header nav ul li a.active {
+    text-decoration: underline; /* Underline text for active page */
+}
+
+header h1 {
+    color: #000; /* Black text for the header title */
+    font-size: 24px; /* Font size for the header title */
+    font-weight: bold; /* Bold text for the header title */
+    margin: 0; /* Remove default margin */
+}
+
+.form-container {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: white;
+    padding: 10px;
+    border-radius: 5px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    z-index: 1000; /* Ensure the form is on top of the map */
+}
+
 .orgchart .node img {
     width: 50px;
     height: 50px;
     border-radius: 50%;
     margin-right: 10px;
 }
-
-
-
-
-
-
-
-
-
-
