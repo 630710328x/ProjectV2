@@ -7,16 +7,19 @@ document.addEventListener("DOMContentLoaded", function() {
 
     let chart;
 
-    const loadFamilyData = (table) => {
-        loadingIndicator.style.display = 'block';
-
-        fetch(`fetch_family_data.php?table=${table}`)
+    const fetchFamilyData = (table) => {
+        return fetch(`fetch_family_data.php?table=${table}`)
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`Network response was not ok: ${response.statusText}`);
                 }
                 return response.json();
-            })
+            });
+    };
+
+    const loadFamilyData = (table) => {
+        loadingIndicator.style.display = 'block';
+        fetchFamilyData(table)
             .then(familyData => {
                 if (familyData.error) {
                     throw new Error(familyData.error);
@@ -25,11 +28,10 @@ document.addEventListener("DOMContentLoaded", function() {
                 const nodes = familyData.map(member => ({
                     id: member.id,
                     pid: member.parent_id,
-                    ppid: member.ppid,
                     name: member.name,
                     relationship: member.relationship,
-                    birth: member.birth,
-                    death: member.death,
+                    birth: member.birth !== null ? member.birth : "ไม่ปรากฏ",
+                    death: member.death !== null ? member.death : "ไม่ปรากฏ",
                     img: member.img,
                     tags: member.tags
                 }));
@@ -67,7 +69,7 @@ document.addEventListener("DOMContentLoaded", function() {
             })
             .catch(error => {
                 console.error('Error fetching data:', error);
-                errorContainer.textContent = 'An error occurred while fetching data. Please try again later.';
+                errorContainer.textContent = `An error occurred: ${error.message}`;
                 errorContainer.style.display = 'block';
             })
             .finally(() => {
@@ -81,7 +83,5 @@ document.addEventListener("DOMContentLoaded", function() {
         loadFamilyData(this.value);
     });
 
-    searchInput.addEventListener('input', function() {
-        chart.search(this.value);
-    });
+    
 });
