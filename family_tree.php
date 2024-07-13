@@ -9,10 +9,11 @@
 </head>
 <body>
     <header>
+        <h1>Family Tree</h1>
         <nav>
             <ul>
                 <li><a href="index.php">Home</a></li>
-                <li><a href="family_tree.php">Family Tree</a></li>
+                <li><a href="family_tree.php" class="active">Family Tree</a></li>
             </ul>
         </nav>
     </header>
@@ -21,6 +22,12 @@
         <select id="tableSelect" name="tableSelect" aria-label="Select Family Table">
             <option value="ratanakosin">Ratanakosin</option>
             <option value="lanchang">Lanchang</option>
+            <option value="sukothai">Sukothai</option>
+            <option value="kamenravak">Kamenravak</option>
+            <option value="funan">Funan</option>
+            <option value="srivichai">Srivichai</option>
+            <option value="tampornling">Tampornling</option>
+            <option value="janela">Janela</option>
         </select>
     </div>
     <div id="loading" style="display:none;">Loading...</div>
