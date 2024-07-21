@@ -32,12 +32,16 @@ try {
         $inputYear += 543;
     }
 
+    if ($eraType === 'AP' && $inputYear !== null) {
+        $inputYear += 2324;
+    }
+
     // Prepare and execute queries for each table
     foreach ($tables as $table) {
         if ($reset || $inputYear === null) {
-            $stmt = $pdo->prepare("SELECT latitude, longitude, name, kingdomname, url, imgplace, reignstart, reignend, after, before, id FROM $table WHERE id = 1 LIMIT 1");
+            $stmt = $pdo->prepare("SELECT latitude, longitude, name, kingdomname, url, imgplace, reignstart, reignend, after, before, relationship FROM $table WHERE id = 1 LIMIT 1");
         } else {
-            $stmt = $pdo->prepare("SELECT latitude, longitude, name, kingdomname, url, imgplace, reignstart, reignend, after, before, id FROM $table WHERE :year BETWEEN reignstart AND reignend");
+            $stmt = $pdo->prepare("SELECT latitude, longitude, name, kingdomname, url, imgplace, reignstart, reignend, after, before, relationship FROM $table WHERE :year BETWEEN reignstart AND reignend");
             $stmt->bindParam(':year', $inputYear, PDO::PARAM_INT);
         }
         $stmt->execute();
@@ -80,15 +84,16 @@ try {
     <div id="map">
         <div class="form-container">
             <form method="POST" action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>">
-                <label for="year">Enter a year:</label>
+                <label for="year">ใส่ปีศักราช : </label>
                 <input type="number" id="year" name="year" value="<?php echo isset($_POST['reset']) ? '' : (isset($_POST['year']) ? htmlspecialchars($_POST['year']) : ''); ?>">
-                <label for="era">Select Era:</label>
+                <label for="era">เลือกปีศักราช : </label>
                 <select id="era" name="era">
-                    <option value="BE" <?php echo (!isset($_POST['era']) || $_POST['era'] === 'BE') ? 'selected' : ''; ?>>Buddhist Era (BE)</option>
-                    <option value="CE" <?php echo (isset($_POST['era']) && $_POST['era'] === 'CE') ? 'selected' : ''; ?>>Christian Era (CE)</option>
+                    <option value="BE" <?php echo (!isset($_POST['era']) || $_POST['era'] === 'BE') ? 'selected' : ''; ?>>พุทธศักราช (พ.ศ.)</option>
+                    <option value="CE" <?php echo (isset($_POST['era']) && $_POST['era'] === 'CE') ? 'selected' : ''; ?>>คริสต์ศักราช (ค.ศ.)</option>
+                    <option value="AP" <?php echo (isset($_POST['era']) && $_POST['era'] === 'AP') ? 'selected' : ''; ?>>รัตนโกสินทรศก (ร.ศ.)</option>
                 </select>
-                <button type="submit" class="oval-button">Submit</button>
-                <button type="submit" name="reset" value="reset" class="oval-button">Reset</button>
+                <button type="submit" class="oval-button">ค้นหา</button>
+                <button type="submit" name="reset" value="reset" class="oval-button">รีเซ็ต</button>
             </form>
         </div>
     </div>
@@ -114,7 +119,7 @@ try {
                             </a>
                         </p>
                         <h3 style="margin-bottom: 8px;">${location.kingdomname}</h3>
-                        <p>รัชกาลที่ ${location.id}</p>
+                        <p>${location.relationship}</p>
                         <p>${location.name}</p>
                         <p>พระองค์ก่อนหน้า : ${location.before ? location.before : 'ไม่ปรากฏ'}</p>
                         <p>พระองค์ถัดไป : ${location.after ? location.after : 'ไม่ปรากฏ'}</p>
