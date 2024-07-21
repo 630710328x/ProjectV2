@@ -6,6 +6,7 @@
     <title>Family Tree</title>
     <link rel="stylesheet" href="styles.css">
     <script src="https://balkangraph.com/js/latest/OrgChart.js"></script>
+    
 </head>
 <body>
     <header>
@@ -18,16 +19,21 @@
         </nav>
     </header>
     <div id="controls">
-        <label for="tableSelect">Select Table: </label>
+        <label for="tableSelect">เลือกอาณาจักร : </label>
         <select id="tableSelect" name="tableSelect" aria-label="Select Family Table">
-            <option value="ratanakosin">Ratanakosin</option>
-            <option value="lanchang">Lanchang</option>
-            <option value="sukothai">Sukothai</option>
-            <option value="kamenravak">Kamenravak</option>
-            <option value="funan">Funan</option>
-            <option value="srivichai">Srivichai</option>
-            <option value="tampornling">Tampornling</option>
-            <option value="janela">Janela</option>
+            <option value="funan">อาณาจักรฟูนาน</option>
+            <option value="tampornling">อาณาจักรตามพรลิงค์</option>
+            <option value="janela">อาณาจักรเจนละ</option>
+            <option value="hripunchai">อาณาจักรหริภุญชัย</option>
+            <option value="srivichai">อาณาจักรศรีวิชัย</option>
+            <option value="panakorn">อาณาจักรพระนคร</option>
+            <option value="lavo">อาณาจักรละโว้</option>
+            <option value="sukothai">อาณาจักรสุโขทัย</option>
+            <option value="lanna">อาณาจักรล้านนา</option>
+            <option value="ayuttaya">อาณาจักรอยุธยา</option>
+            <option value="lanchang">อาณาจักรล้านช้าง</option>
+            <option value="kamenravak">อาณาจักรเขมรละแวก</option>
+            <option value="ratanakosin">อาณาจักรรัตนโกสินทร์</option>
         </select>
     </div>
     <div id="loading" style="display:none;">Loading...</div>
