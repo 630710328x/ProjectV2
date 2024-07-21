@@ -14,6 +14,10 @@ document.addEventListener("DOMContentLoaded", function() {
                     throw new Error(`Network response was not ok: ${response.statusText}`);
                 }
                 return response.json();
+            })
+            .catch(error => {
+                console.error('Fetch error:', error);
+                throw error;
             });
     };
 
@@ -21,20 +25,28 @@ document.addEventListener("DOMContentLoaded", function() {
         loadingIndicator.style.display = 'block';
         fetchFamilyData(table)
             .then(familyData => {
-                if (familyData.error) {
-                    throw new Error(familyData.error);
+                if (!Array.isArray(familyData)) {
+                    throw new Error('Invalid data format');
                 }
 
                 const nodes = familyData.map(member => ({
                     id: member.id,
                     pid: member.parent_id,
-                    name: member.name,
-                    relationship: member.relationship,
-                    birth: member.birth !== null ? member.birth : "ไม่ปรากฏ",
-                    death: member.death !== null ? member.death : "ไม่ปรากฏ",
+                    ชื่อ: member.name,
+                    ตำแหน่ง: member.relationship,
+                    ประสูติ: member.birth !== null ? member.birth : "ไม่ปรากฏ",
+                    สวรรคต: member.death !== null ? member.death : "ไม่ปรากฏ",
                     img: member.img,
-                    tags: member.tags
+                    tags: member.tags,
+                    ราชวงศ์: member.monarch !== null ? member.monarch : "ไม่ปรากฏ",
+                    คู่อภิเษก: member.wife !== null ? member.wife : "ไม่ปรากฏ",
+                    พระราชบุตร: member.child !== null ? member.child : "ไม่ปรากฏ",
+                    พระบิดา: member.father !== null ? member.father : "ไม่ปรากฏ",
+                    พระมารดา: member.mother !== null ? member.mother : "ไม่ปรากฏ",
+                    วิกิพีเดีย: member.urlking !== null ? member.urlking : "ไม่ปรากฏ",
                 }));
+
+                console.log('Nodes:', nodes);
 
                 if (chart) {
                     chart.load(nodes);
@@ -42,22 +54,28 @@ document.addEventListener("DOMContentLoaded", function() {
                     chart = new OrgChart(treeContainer, {
                         nodes: nodes,
                         nodeBinding: {
-                            field_0: "name",
-                            field_1: "relationship",
+                            field_0: "ชื่อ",
+                            field_1: "ตำแหน่ง",
                             img_0: "img"
                         },
                         template: "diva",
                         enableSearch: true,
-                        searchFields: ["name"],
+                        searchFields: ["ชื่อ"],
                         nodeTemplate: function(data) {
                             return `
                                 <div class="node">
-                                    <img src="${data.img}" alt="${data.name}" />
+                                    <img src="${data.img}" alt="${data.ชื่อ}" />
                                     <div>
-                                        <div>${data.name}</div>
-                                        <div>${data.relationship}</div>
-                                        <div>Birth: ${data.birth}</div>
-                                        <div>Death: ${data.death}</div>
+                                        <div>${data.ชื่อ}</div>
+                                        <div>${data.ตำแหน่ง}</div>
+                                        <div>${data.ประสูติ}</div>
+                                        <div>${data.สวรรคต}</div>
+                                        <div>${data.ราชวงศ์}</div>
+                                        <div>${data.คู่อภิเษก}</div>
+                                        <div>${data.พระราชบุตร}</div>
+                                        <div>${data.พระบิดา}</div>
+                                        <div>${data.พระมารดา}</div>
+                                        <div>${data.วิกิพีเดีย}</div>
                                     </div>
                                 </div>
                             `;
@@ -82,6 +100,4 @@ document.addEventListener("DOMContentLoaded", function() {
     tableSelect.addEventListener('change', function() {
         loadFamilyData(this.value);
     });
-
-    
 });
