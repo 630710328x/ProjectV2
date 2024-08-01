@@ -100,40 +100,56 @@ try {
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
-        var map = L.map('map').setView([12.923828640427846, 100.8822441508516], 6);
-        L.tileLayer('https://api.maptiler.com/maps/streets-v2/{z}/{x}/{y}.png?key=Qy0caTTPn0K7S8WaoZ1d', {
-            attribution: '<a href="https://www.maptiler.com/copyright/" target="_blank">&copy; MapTiler</a> <a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>'
-        }).addTo(map);
+        // Function to convert Buddhist Era to Christian Era
+function convertToCE(buddhistYear) {
+    return buddhistYear !== null ? buddhistYear - 543 : 'ไม่ปรากฏ';
+}
 
-        var locations = <?php echo $locationsJson; ?>;
-        
-        locations.forEach(function(location) {
-            // Validate latitude and longitude
-            if (location.latitude !== null && location.longitude !== null) {
-                var popupContent = `
-                    <div style="text-align: center;">
-                        <img src="${location.imgplace}" alt="${location.name}" style="width: 200px; height: auto; margin-bottom: 8px;">
-                        <p style="margin-top: 8px;">
-                            <a href="${location.url}" target="_blank">
-                                <img src="https://logoeps.com/wp-content/uploads/2014/05/49360-wikipedia-logo-icon-vector-icon-vector-eps.png" alt="Wikipedia" style="width: 30px; height: auto; margin-right: 0px;">
-                            </a>
-                        </p>
-                        <h3 style="margin-bottom: 8px;">${location.kingdomname}</h3>
-                        <p>${location.relationship}</p>
-                        <p>${location.name}</p>
-                        <p>พระองค์ก่อนหน้า : ${location.before ? location.before : 'ไม่ปรากฏ'}</p>
-                        <p>พระองค์ถัดไป : ${location.after ? location.after : 'ไม่ปรากฏ'}</p>
-                        <p>ปกครอง : ${location.reignstart ? location.reignstart : 'ไม่ปรากฏ'} - ${location.reignend ? location.reignend : 'ไม่ปรากฏ'}</p>
-                    </div>
-                `;
+// Initialize the map
+var map = L.map('map').setView([12.923828640427846, 100.8822441508516], 6);
+L.tileLayer('https://api.maptiler.com/maps/streets-v2/{z}/{x}/{y}.png?key=Qy0caTTPn0K7S8WaoZ1d', {
+    attribution: '<a href="https://www.maptiler.com/copyright/" target="_blank">&copy; MapTiler</a> <a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>'
+}).addTo(map);
 
-                // Add marker to map
-                L.marker([location.latitude, location.longitude]).addTo(map)
-                .bindPopup(popupContent);
-            } else {
-                console.warn('Invalid location data:', location);
-            }
-        });
+// Parse and process locations data
+var locations = <?php echo $locationsJson; ?>;
+
+if (Array.isArray(locations) && locations.length) {
+    locations.forEach(function(location) {
+        // Validate latitude and longitude
+        if (location.latitude && location.longitude) {
+            var reignStartCE = convertToCE(location.reignstart);
+            var reignEndCE = convertToCE(location.reignend);
+
+            var popupContent = `
+                <div style="text-align: center;">
+                    <img src="${location.imgplace}" alt="${location.name}" style="width: 200px; height: auto; margin-bottom: 8px;">
+                    <p style="margin-top: 8px;">
+                        <a href="${location.url}" target="_blank">
+                            <img src="https://logoeps.com/wp-content/uploads/2014/05/49360-wikipedia-logo-icon-vector-icon-vector-eps.png" alt="Wikipedia" style="width: 30px; height: auto; margin-right: 0px;">
+                        </a>
+                    </p>
+                    <h3 style="margin-bottom: 8px;">${location.kingdomname}</h3>
+                    <p>${location.relationship}</p>
+                    <p>พระนาม : ${location.name}</p>
+                    <p>พระองค์ก่อนหน้า : ${location.before ? location.before : 'ไม่ปรากฏ'}</p>
+                    <p>พระองค์ถัดไป : ${location.after ? location.after : 'ไม่ปรากฏ'}</p>
+                    <p>ปกครอง : พ.ศ. ${location.reignstart ? location.reignstart : 'ไม่ปรากฏ'} - พ.ศ. ${location.reignend ? location.reignend : 'ไม่ปรากฏ'}</p>
+                    <p>ปกครอง : ค.ศ. ${reignStartCE} - ค.ศ. ${reignEndCE}</p>
+                </div>
+            `;
+
+            // Add marker to map
+            L.marker([location.latitude, location.longitude]).addTo(map)
+            .bindPopup(popupContent);
+        } else {
+            console.warn('Invalid location data:', location);
+        }
+    });
+} else {
+    console.warn('No location data available.');
+}
+
     </script>
 </body>
 </html>
