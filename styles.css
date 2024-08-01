@@ -101,4 +101,13 @@ header h1 {
     margin-right: 10px;
 }
 
+.node.female rect {
+    fill: #fdb0c0;
+}
+
+.node.male rect {
+    fill: #ADD8E6;
+}
+
+
 
