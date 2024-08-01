@@ -36,7 +36,7 @@ if (!in_array($table, $allowed_tables)) {
 // Function to fetch data from a specified table
 function fetch_family_data($conn, $table) {
     // Fetch family data from the specified table
-    $query = "SELECT id, parent_id, name, relationship, birth, death, img, tags, monarch, wife, child, father, mother, urlking FROM public.$table";
+    $query = "SELECT id, parent_id, name, relationship, birth, death, img, tags, monarch, wife, child, father, mother, urlking, ppid, reignstart, reignend, gender FROM public.$table";
     $result = pg_query($conn, $query);
 
     if (!$result) {
