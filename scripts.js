@@ -4,7 +4,8 @@ document.addEventListener("DOMContentLoaded", function() {
     const errorContainer = document.getElementById('error');
     const loadingIndicator = document.getElementById('loading');
     const searchInput = document.getElementById('searchInput');
-
+    OrgChart.templates.ana.field_0 = '<text width="230" style="font-size: 18px;" fill="#000000" x="125" y="95" text-anchor="middle" class="field_0">{val}</text>';
+    OrgChart.templates.ana.field_1 = '<text width="130" text-overflow="multiline" style="font-size: 14px;" fill="#000000" x="230" y="30" text-anchor="end" class="field_1">{val}</text>';
     let chart;
 
     const fetchFamilyData = (table) => {
@@ -34,8 +35,9 @@ document.addEventListener("DOMContentLoaded", function() {
                     pid: member.parent_id,
                     ชื่อ: member.name,
                     ตำแหน่ง: member.relationship,
-                    ประสูติ: member.birth !== null ? member.birth : "ไม่ปรากฏ",
-                    สวรรคต: member.death !== null ? member.death : "ไม่ปรากฏ",
+                    ครองราชย์: (member.reignstart !== null ? "พ.ศ. " + member.reignstart + " - " + (member.reignend !== null ? "พ.ศ. " + member.reignend : "ไม่ปรากฎ") : "ไม่ปรากฎ"),
+                    ประสูติ: member.birth !== null ? "พ.ศ. " + member.birth : "ไม่ปรากฏ",
+                    สวรรคต: member.death !== null ? "พ.ศ. " + member.death : "ไม่ปรากฏ",
                     img: member.img,
                     tags: member.tags,
                     ราชวงศ์: member.monarch !== null ? member.monarch : "ไม่ปรากฏ",
@@ -44,7 +46,10 @@ document.addEventListener("DOMContentLoaded", function() {
                     พระบิดา: member.father !== null ? member.father : "ไม่ปรากฏ",
                     พระมารดา: member.mother !== null ? member.mother : "ไม่ปรากฏ",
                     วิกิพีเดีย: member.urlking !== null ? member.urlking : "ไม่ปรากฏ",
+                    ppid: member.ppid
                 }));
+
+                
 
                 console.log('Nodes:', nodes);
 
@@ -58,29 +63,13 @@ document.addEventListener("DOMContentLoaded", function() {
                             field_1: "ตำแหน่ง",
                             img_0: "img"
                         },
-                        template: "diva",
+                        template: "ana",
                         enableSearch: true,
                         searchFields: ["ชื่อ"],
-                        nodeTemplate: function(data) {
-                            return `
-                                <div class="node">
-                                    <img src="${data.img}" alt="${data.ชื่อ}" />
-                                    <div>
-                                        <div>${data.ชื่อ}</div>
-                                        <div>${data.ตำแหน่ง}</div>
-                                        <div>${data.ประสูติ}</div>
-                                        <div>${data.สวรรคต}</div>
-                                        <div>${data.ราชวงศ์}</div>
-                                        <div>${data.คู่อภิเษก}</div>
-                                        <div>${data.พระราชบุตร}</div>
-                                        <div>${data.พระบิดา}</div>
-                                        <div>${data.พระมารดา}</div>
-                                        <div>${data.วิกิพีเดีย}</div>
-                                    </div>
-                                </div>
-                            `;
-                        }
+                        
                     });
+
+                    
                 }
 
                 errorContainer.style.display = 'none';
