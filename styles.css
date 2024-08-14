@@ -1,10 +1,5 @@
 /* styles.css */
 
-#map {
-    height: 900px;
-    position: relative; /* To position the form container within the map */
-}
-
 .oval-button {
     background-color: #fdfdfd; /* White background */
     border: 2px solid #000000; /* Black border */
