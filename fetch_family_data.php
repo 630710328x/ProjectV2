@@ -1,13 +1,16 @@
 <?php
-// Enable error reporting for debugging
+// Enable error reporting
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
+// Start output buffering to prevent any output before JSON
+ob_start();
+
 // Database connection details
 $host = 'localhost';
-$db = 'postgres';  // Replace with your actual database name
-$user = 'postgres'; // Replace with your actual database username
-$pass = 'root'; // Replace with your actual database password
+$db = 'postgres';
+$user = 'postgres';
+$pass = 'root';
 
 // Function to handle and output errors as JSON
 function handle_error($message) {
@@ -35,7 +38,6 @@ if (!in_array($table, $allowed_tables)) {
 
 // Function to fetch data from a specified table
 function fetch_family_data($conn, $table) {
-    // Fetch family data from the specified table
     $query = "SELECT id, parent_id, name, relationship, birth, death, img, tags, monarch, wife, child, father, mother, urlking, ppid, reignstart, reignend, gender FROM public.$table";
     $result = pg_query($conn, $query);
 
@@ -45,7 +47,6 @@ function fetch_family_data($conn, $table) {
 
     $family = [];
     while ($row = pg_fetch_assoc($result)) {
-        // Ensure that tags is returned as an array
         if (isset($row['tags'])) {
             $row['tags'] = explode(',', trim($row['tags'], '{}'));
         }
@@ -59,7 +60,8 @@ function fetch_family_data($conn, $table) {
 $family = fetch_family_data($conn, $table);
 pg_close($conn);
 
-// Encode data to JSON
+// Output JSON, ensure no other output comes before this
 header('Content-Type: application/json');
+ob_end_clean(); // Clear the output buffer to remove any preceding content
 echo json_encode($family);
 ?>
