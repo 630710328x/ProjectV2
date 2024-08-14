@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Family Tree</title>
     <link rel="stylesheet" href="styles.css">
-    <script src="https://balkangraph.com/js/latest/OrgChart.js"></script>
+    <script src="https://balkan.app/js/OrgChart.js"></script>
     
 </head>
 <body>
