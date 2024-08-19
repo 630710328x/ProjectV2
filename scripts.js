@@ -4,6 +4,7 @@ document.addEventListener("DOMContentLoaded", function() {
     const errorContainer = document.getElementById('error');
     const loadingIndicator = document.getElementById('loading');
     const searchInput = document.getElementById('searchInput');
+    
     OrgChart.templates.ana.defs = 
     `<g transform="matrix(0.05,0,0,0.05,-12,-9)" id="heart">
         <path fill="#F57C00" d="M438.482,58.61c-24.7-26.549-59.311-41.655-95.573-41.711c-36.291,0.042-70.938,15.14-95.676,41.694l-8.431,8.909  
@@ -13,14 +14,14 @@ document.addEventListener("DOMContentLoaded", function() {
     <g>`;
 
     OrgChart.templates.ana.field_0 = 
-    '<text data-width="230" data-text-overflow="ellipsis" style="font-size: 22px;" fill="#000000" x="125" y="100" text-anchor="middle">{val}</text>';
+    '<text data-width="230" data-text-overflow="ellipsis" style="font-size: 20px;" fill="#000000" x="125" y="100" text-anchor="middle">{val}</text>';
     OrgChart.templates.ana.field_1 = 
-    '<text data-width="230" data-text-overflow="multiline" style="font-size: 16px;" fill="#000000" x="230" y="30" text-anchor="end">{val}</text>';
+    '<text data-width="130" data-text-overflow="ellipsis" style="font-size: 16px;" fill="#000000" x="230" y="30" text-anchor="end">{val}</text>';
 
     OrgChart.templates.filtered = Object.assign({}, OrgChart.templates.ana);
-    OrgChart.templates.filtered.size = [40, 120];
+    OrgChart.templates.filtered.size = [80, 150];
     OrgChart.templates.filtered.img_0 = '';
-    OrgChart.templates.filtered.field_0 = '<text transform="rotate(90)" data-text-overflow="ellipsis" style="font-size: 14px;" fill="#000000" x="60" y="-15" text-anchor="middle">{val}</text>';
+    OrgChart.templates.filtered.field_0 = '<text data-text-overflow="ellipsis" transform="rotate(90)" style="font-size: 22px;" fill="#000000" x="60" y="-30" text-anchor="middle">{val}</text>';
     OrgChart.templates.filtered.field_1 = '';
 
     let chart;
@@ -47,6 +48,16 @@ document.addEventListener("DOMContentLoaded", function() {
                     throw new Error('Invalid data format');
                 }
 
+                const translateGender = (gender) => {
+                    if (gender === 'male') {
+                        return 'ชาย';
+                    } else if (gender === 'female') {
+                        return 'หญิง';
+                    } else {
+                        return gender;
+                    }
+                };
+                
                 const nodes = familyData.map(member => ({
                     id: member.id,
                     pid: member.parent_id,
@@ -64,10 +75,9 @@ document.addEventListener("DOMContentLoaded", function() {
                     พระมารดา: member.mother !== null ? member.mother : "ไม่ปรากฏ",
                     วิกิพีเดีย: member.urlking !== null ? member.urlking : "ไม่ปรากฏ",
                     ppid: member.ppid,
-                    gender: member.gender
+                    เพศ: translateGender(member.gender)  // ใช้ฟังก์ชัน translateGender() ที่นี่
                 }));
                 
-
                 console.log('Nodes:', nodes);
 
                 if (chart) {
@@ -79,7 +89,7 @@ document.addEventListener("DOMContentLoaded", function() {
                         mouseScrool: OrgChart.none,
                         align: OrgChart.ORIENTATION,
                         keyNavigation: true,
-                        filterBy: ['gender'],
+                        filterBy: ['เพศ', 'ราชวงศ์'],
                         editForm: {
                             buttons: {
                                 edit: null,
@@ -114,11 +124,11 @@ document.addEventListener("DOMContentLoaded", function() {
                     chart.on('render-link', function(sender, args) {
                         let heartCreated = false;
                     
-                        // เงื่อนไขแรก: ถ้า ppid ถูกกำหนด และยังไม่ได้สร้างหัวใจ
+                        // // เงื่อนไขแรก: ถ้า ppid ถูกกำหนด และยังไม่ได้สร้างหัวใจ
                         // if (args.cnode.ppid !== undefined && !heartCreated) {
-                        //     args.html += '<use xlink:href="#heart" x="'+ args.p.xa +'" y="'+ args.p.ya +'" />';
-                        //     heartCreated = true; // ตั้งค่าว่าหัวใจถูกสร้างแล้ว
-                        // }
+                        //      args.html += '<use xlink:href="#heart" x="'+ args.p.xa +'" y="'+ args.p.ya +'" />';
+                        //      heartCreated = true; // ตั้งค่าว่าหัวใจถูกสร้างแล้ว
+                        //  }
                     
                         // เงื่อนไขที่สอง: ถ้ามี tag {partner} และยังไม่ได้สร้างหัวใจ
                         if (!heartCreated && args.cnode.tags && args.cnode.tags.includes('partner')) {
