@@ -107,7 +107,7 @@ try {
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
         #map {
-            height: 889px;
+            height: 860px;
         }
     </style>
 </head>
@@ -118,6 +118,7 @@ try {
             <ul>
                 <li><a href="index.php" class="active">Home</a></li>
                 <li><a href="family_tree.php">Family Tree</a></li>
+                <li><a href="timeline.php">Timeline</a></li>
             </ul>
         </nav>
     </header>
@@ -203,7 +204,15 @@ try {
         return buddhistYear !== null ? buddhistYear - 543 : 'ไม่ปรากฏ';
     }
 
-    var map = L.map('map').setView([12.923828640427846, 100.8822441508516], 6);
+    var map = L.map('map', {
+    scrollWheelZoom: false,   // ปิดการซูมด้วยการเลื่อนเมาส์
+    doubleClickZoom: false,   // ปิดการซูมด้วยการดับเบิลคลิก
+    dragging: true,           // อนุญาตให้เลื่อนแผนที่
+    zoomControl: true,        // แสดงปุ่มควบคุมการซูม
+    boxZoom: false,           // ปิดการซูมด้วยการกดปุ่ม Shift ค้างแล้วลาก
+    touchZoom: false          // ปิดการซูมด้วยการใช้นิ้วสัมผัส (สำหรับอุปกรณ์เคลื่อนที่)
+}).setView([12.923828640427846, 100.8822441508516], 6);
+
     L.tileLayer('https://api.maptiler.com/maps/streets-v2/{z}/{x}/{y}.png?key=Qy0caTTPn0K7S8WaoZ1d', {
         attribution: '<a href="https://www.maptiler.com/copyright/" target="_blank">&copy; MapTiler</a> <a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>'
     }).addTo(map);

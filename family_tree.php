@@ -15,6 +15,7 @@
             <ul>
                 <li><a href="index.php">Home</a></li>
                 <li><a href="family_tree.php" class="active">Family Tree</a></li>
+                <li><a href="timeline.php">Timeline</a></li>
             </ul>
         </nav>
     </header>
