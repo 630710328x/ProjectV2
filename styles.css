@@ -1,22 +1,23 @@
 /* styles.css */
 
 .oval-button {
-    background-color: #fdfdfd; /* White background */
-    border: 2px solid #000000; /* Black border */
-    color: black; /* Black text */
-    padding: 5px 10px; /* Some padding */
-    text-align: center; /* Centered text */
-    text-decoration: none; /* Remove underline */
-    display: inline-block; /* Inline block */
-    font-size: 16px; /* Increase font size */
-    margin: 4px 2px; /* Some margin */
-    cursor: pointer; /* Pointer/hand icon */
-    border-radius: 25px; /* Rounded corners */
-    transition: background-color 0.3s, border-color 0.3s; /* Smooth transition for hover effect */
+    background-color: #3498db; /* Blue background */
+    border: none;
+    color: white;
+    padding: 10px 20px; /* More padding */
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;
+    cursor: pointer;
+    border-radius: 25px;
+    transition: background-color 0.3s, transform 0.3s;
 }
 
 .oval-button:hover {
-    background-color: #dddddd; /* Grey background on hover */
+    background-color: #2980b9; /* Darker blue on hover */
+    transform: translateY(-2px); /* Slight lift effect */
 }
 
 body {

@@ -1,20 +1,17 @@
 <?php
-// ข้อมูลการเชื่อมต่อฐานข้อมูล
+// ข้อมูลการเชื่อมต่อฐานข้อมูลและการดึงข้อมูลจากฐานข้อมูลยังคงเหมือนเดิม
 $host = "localhost";
 $port = "5432";
 $dbname = "postgres";
 $user = "postgres";
 $password = "root";
 
-// สร้างการเชื่อมต่อกับฐานข้อมูล
 $conn = pg_connect("host=$host port=$port dbname=$dbname user=$user password=$password");
 
-// ตรวจสอบการเชื่อมต่อ
 if (!$conn) {
     die("Connection failed: " . pg_last_error());
 }
 
-// คำสั่ง SQL เพื่อดึงข้อมูลจากหลายตาราง เฉพาะที่ kingdomname ไม่ใช่ NULL
 $query = "
     SELECT name, reignstart, reignend, kingdomname, monarch FROM public.funan WHERE kingdomname IS NOT NULL
     UNION ALL
@@ -44,21 +41,17 @@ $query = "
     ORDER BY reignstart ASC, reignend ASC;
 ";
 
-// ดึงข้อมูลจากฐานข้อมูล
 $result = pg_query($conn, $query);
 
-// ตรวจสอบว่ามีข้อมูลหรือไม่
 if (!$result) {
     die("Error in SQL query: " . pg_last_error());
 }
 
-// เก็บข้อมูลในรูปแบบ JSON
 $timeline_data = array();
 while ($row = pg_fetch_assoc($result)) {
     $timeline_data[] = $row;
 }
 
-// Get unique kingdom names for checkboxes
 $kingdom_query = "SELECT DISTINCT kingdomname FROM (
     SELECT kingdomname FROM public.funan
     UNION ALL
@@ -94,10 +87,8 @@ while ($row = pg_fetch_assoc($kingdom_result)) {
     $kingdoms[] = $row['kingdomname'];
 }
 
-// ปิดการเชื่อมต่อฐานข้อมูล
 pg_close($conn);
 
-// ลำดับที่ต้องการให้ checkbox แสดงผล
 $desired_order = [
     'ฟูนาน',
     'อาณาจักรตามพรลิงค์',
@@ -114,7 +105,6 @@ $desired_order = [
     'กรุงรัตนโกสินทร์'
 ];
 
-// จัดเรียง $kingdoms ให้ตรงกับลำดับที่ต้องการ
 usort($kingdoms, function($a, $b) use ($desired_order) {
     $pos_a = array_search($a, $desired_order);
     $pos_b = array_search($b, $desired_order);
@@ -127,9 +117,169 @@ usort($kingdoms, function($a, $b) use ($desired_order) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dynamic Timeline with Filters</title>
-    <link rel="stylesheet" href="styles.css">
-    
+    <title>Horizontal Timeline with Arrows</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f2f5;
+            color: #333;
+        }
+
+        header {
+            background-color: #007bff;
+            padding: 10px 0;
+            color: #ffffff;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 28px;
+        }
+
+        nav ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 15px 0 0 0;
+            display: flex;
+            justify-content: center;
+        }
+
+        nav ul li {
+            margin: 0 15px;
+        }
+
+        nav ul li a {
+            color: #ffffff;
+            text-decoration: none;
+            font-size: 18px;
+            padding: 5px 10px;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+
+        nav ul li a:hover,
+        nav ul li a.active {
+            background-color: #0056b3;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 20px;
+            background-color: #ffffff;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .select-all-container {
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+        }
+
+        .select-all-container input {
+            margin-right: 10px;
+        }
+
+        .kingdom-filters {
+            margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .kingdom-filters label {
+            display: flex;
+            align-items: center;
+            background-color: #e9ecef;
+            padding: 10px 15px;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .kingdom-filters input {
+            margin-right: 10px;
+        }
+
+        .kingdom-filters label:hover {
+            background-color: #dee2e6;
+        }
+
+        .timeline-wrapper {
+            position: relative;
+            overflow-x: auto;
+            white-space: nowrap;
+            padding: 20px;
+        }
+
+        .timeline-range {
+            display: inline-block;
+            vertical-align: top;
+            width: 280px;
+            margin-right: 15px;
+            border: 1px solid #ced4da;
+            border-radius: 8px;
+            background-color: #f8f9fa;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .timeline-range h2 {
+            font-size: 20px;
+            color: #495057;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        .timeline-item {
+            margin-bottom: 15px;
+            padding: 15px;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            background-color: #ffffff;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            overflow: hidden; /* Ensures content does not overflow */
+            text-overflow: ellipsis; /* Adds '...' to indicate overflow */
+            white-space: nowrap; /* Prevents text from wrapping to a new line */
+}
+
+        .timeline-item h3 {
+            margin: 0 0 5px 0;
+            font-size: 18px;
+            color: #343a40;
+        }
+
+        .timeline-item p {
+            margin: 5px 0;
+            font-size: 14px;
+            color: #6c757d;
+        }
+
+        .timeline-range:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .timeline::-webkit-scrollbar {
+            height: 8px;
+        }
+
+        .timeline::-webkit-scrollbar-thumb {
+            background-color: #adb5bd;
+            border-radius: 4px;
+        }
+
+        .timeline::-webkit-scrollbar-thumb:hover {
+            background-color: #6c757d;
+        }
+    </style>
 </head>
 <body>
     <header>
@@ -138,7 +288,7 @@ usort($kingdoms, function($a, $b) use ($desired_order) {
             <ul>
                 <li><a href="index.php">Home</a></li>
                 <li><a href="family_tree.php">Family Tree</a></li>
-                <li><a href="timeline.php" class="active">timeline</a></li>
+                <li><a href="timeline.php" class="active">Timeline</a></li>
             </ul>
         </nav>
     </header>
@@ -150,33 +300,63 @@ usort($kingdoms, function($a, $b) use ($desired_order) {
         <div class="kingdom-filters">
             <?php foreach ($kingdoms as $kingdom): ?>
                 <label>
-                    <input type="checkbox" class="kingdom-filter" value="<?php echo htmlspecialchars($kingdom, ENT_QUOTES, 'UTF-8'); ?>" checked>
-                    <?php echo htmlspecialchars($kingdom, ENT_QUOTES, 'UTF-8'); ?>
+                    <input type="checkbox" class="kingdom-filter" value="<?php echo htmlspecialchars($kingdom); ?>" checked>
+                    <?php echo htmlspecialchars($kingdom); ?>
                 </label>
             <?php endforeach; ?>
         </div>
-        <div class="timeline" id="timeline"></div>
+        <div class="timeline-wrapper">
+            <div id="timeline" class="timeline"></div>
+        </div>
     </div>
 
     <script>
-        const timelineData = <?php echo json_encode($timeline_data, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP); ?>;
+        const timelineData = <?php echo json_encode($timeline_data); ?>;
         const timeline = document.getElementById('timeline');
         const checkboxes = document.querySelectorAll('.kingdom-filter');
         const selectAllCheckbox = document.getElementById('select-all');
 
-        function renderTimeline(filteredData) {
-            timeline.innerHTML = ''; // ล้างข้อมูลเก่าออก
-            filteredData.forEach(item => {
-                const timelineItem = document.createElement('div');
-                timelineItem.classList.add('timeline-item');
-                timelineItem.innerHTML = `
-                    <h3>${item.name}</h3>
-                    <p>${item.kingdomname}</p>
-                    <p>ปกครอง : พ.ศ. ${item.reignstart ? item.reignstart : 'ไม่ปรากฏ'} - พ.ศ. ${item.reignend ? item.reignend : 'ไม่ปรากฏ'}</p>
-                    <p>ราชวงศ์ : ${item.monarch ? item.monarch : 'ไม่ปรากฎ'}</p>
-                `;
-                timeline.appendChild(timelineItem);
+        // ฟังก์ชันเพื่อจัดกลุ่มข้อมูลตามช่วงปี
+        function groupByYearRange(data, range) {
+            const groupedData = {};
+            data.forEach(item => {
+                const startYear = Math.floor(item.reignstart / range) * range;
+                const endYear = startYear + range - 1;
+                const key = `${startYear} - ${endYear}`;
+                if (!groupedData[key]) {
+                    groupedData[key] = [];
+                }
+                groupedData[key].push(item);
             });
+            return groupedData;
+        }
+
+        // ฟังก์ชันเพื่อแสดงไทม์ไลน์
+        function renderTimeline(filteredData) {
+            const groupedData = groupByYearRange(filteredData, 100); // เปลี่ยนช่วงเวลาได้ตามต้องการ เช่น 50 ปี
+            timeline.innerHTML = ''; // ล้างข้อมูลเก่าออก
+
+            Object.keys(groupedData).forEach(range => {
+                const rangeSection = document.createElement('div');
+                rangeSection.classList.add('timeline-range');
+                rangeSection.innerHTML = `<h2>${range}</h2>`;
+                
+                groupedData[range].forEach(item => {
+                    const timelineItem = document.createElement('div');
+                    timelineItem.classList.add('timeline-item');
+                    timelineItem.innerHTML = `
+                        <h3>${item.name}</h3>
+                        <p>${item.kingdomname}</p>
+                        <p>ปกครอง : พ.ศ. ${item.reignstart ? item.reignstart : 'ไม่ปรากฏ'} - พ.ศ. ${item.reignend ? item.reignend : 'ไม่ปรากฏ'}</p>
+                        <p>ราชวงศ์ : ${item.monarch ? item.monarch : 'ไม่ปรากฎ'}</p>
+                    `;
+                    rangeSection.appendChild(timelineItem);
+                });
+
+                timeline.appendChild(rangeSection);
+            });
+
+            updateArrows();
         }
 
         function filterTimeline() {
@@ -187,6 +367,14 @@ usort($kingdoms, function($a, $b) use ($desired_order) {
             const filteredData = timelineData.filter(item => selectedKingdoms.includes(item.kingdomname));
             renderTimeline(filteredData);
         }
+
+        function updateArrows() {
+            arrowLeft.disabled = timeline.scrollLeft === 0;
+            arrowRight.disabled = timeline.scrollLeft + timeline.clientWidth >= timeline.scrollWidth;
+        }
+        
+
+        timeline.addEventListener('scroll', updateArrows);
 
         // Initial render
         filterTimeline();
