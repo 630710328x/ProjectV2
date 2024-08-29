@@ -117,7 +117,7 @@ usort($kingdoms, function($a, $b) use ($desired_order) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Horizontal Timeline with Arrows</title>
+    <title>Horizontal Timeline with Overlapping Rulers</title>
     <style>
         body {
             font-family: 'Helvetica Neue', Arial, sans-serif;
@@ -129,15 +129,17 @@ usort($kingdoms, function($a, $b) use ($desired_order) {
 
         header {
             background-color: #007bff;
-            padding: 10px 0;
+            padding: 15px 0;
             color: #ffffff;
             text-align: center;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            border-bottom: 2px solid #0056b3;
         }
 
         header h1 {
             margin: 0;
-            font-size: 28px;
+            font-size: 32px;
+            font-weight: bold;
         }
 
         nav ul {
@@ -156,14 +158,15 @@ usort($kingdoms, function($a, $b) use ($desired_order) {
             color: #ffffff;
             text-decoration: none;
             font-size: 18px;
-            padding: 5px 10px;
+            padding: 8px 15px;
             border-radius: 5px;
-            transition: background-color 0.3s ease;
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
 
         nav ul li a:hover,
         nav ul li a.active {
             background-color: #0056b3;
+            color: #ffffff;
         }
 
         .container {
@@ -217,43 +220,58 @@ usort($kingdoms, function($a, $b) use ($desired_order) {
             overflow-x: auto;
             white-space: nowrap;
             padding: 20px;
+            background-color: #e9ecef;
+            border-radius: 10px;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
         }
 
-        .timeline-range {
-            display: inline-block;
-            vertical-align: top;
-            width: 280px;
-            margin-right: 15px;
+        .timeline-group {
+            display: flex;
+            flex-direction: row;
+            align-items: flex-start;
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+        .timeline-group .year-label {
+            margin-right: 20px; /* Space between year label and items */
+            font-weight: bold;
+            color: #4a90e2;
+            font-size: 16px;
+            text-align: center;
+            text-transform: uppercase;
+            width: 80px; /* Fixed width for year label */
+        }
+
+        .timeline-items {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            gap: 15px;
+        }
+
+        .timeline-item {
+            position: relative;
+            padding: 15px;
             border: 1px solid #ced4da;
             border-radius: 8px;
-            background-color: #f8f9fa;
-            padding: 15px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            background-color: #ffffff;
+            text-align: center;
+            min-width: 200px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease-in-out;
         }
 
-        .timeline-range h2 {
-            font-size: 20px;
-            color: #495057;
-            text-align: center;
-            margin-bottom: 10px;
+        .timeline-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
         }
-        .timeline-item {
-            margin-bottom: 15px;
-            padding: 15px;
-            border: 1px solid #dee2e6;
-            border-radius: 5px;
-            background-color: #ffffff;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-            overflow: hidden; /* Ensures content does not overflow */
-            text-overflow: ellipsis; /* Adds '...' to indicate overflow */
-            white-space: nowrap; /* Prevents text from wrapping to a new line */
-}
 
         .timeline-item h3 {
-            margin: 0 0 5px 0;
+            margin: 0 0 10px 0;
             font-size: 18px;
-            color: #343a40;
+            color: #333;
         }
 
         .timeline-item p {
@@ -262,22 +280,9 @@ usort($kingdoms, function($a, $b) use ($desired_order) {
             color: #6c757d;
         }
 
-        .timeline-range:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-        }
-
-        .timeline::-webkit-scrollbar {
-            height: 8px;
-        }
-
-        .timeline::-webkit-scrollbar-thumb {
-            background-color: #adb5bd;
-            border-radius: 4px;
-        }
-
-        .timeline::-webkit-scrollbar-thumb:hover {
-            background-color: #6c757d;
+        .timeline-item p:last-child {
+            font-weight: bold;
+            color: #007bff;
         }
     </style>
 </head>
@@ -294,104 +299,110 @@ usort($kingdoms, function($a, $b) use ($desired_order) {
     </header>
     <div class="container">
         <div class="select-all-container">
-            <input type="checkbox" id="select-all" checked>
+            <input type="checkbox" id="select-all">
             <label for="select-all">Select All</label>
         </div>
         <div class="kingdom-filters">
-            <?php foreach ($kingdoms as $kingdom): ?>
-                <label>
-                    <input type="checkbox" class="kingdom-filter" value="<?php echo htmlspecialchars($kingdom); ?>" checked>
-                    <?php echo htmlspecialchars($kingdom); ?>
-                </label>
-            <?php endforeach; ?>
+            <!-- Checkboxes for kingdoms will be dynamically generated here -->
         </div>
-        <div class="timeline-wrapper">
-            <div id="timeline" class="timeline"></div>
+        <div class="timeline-wrapper" id="timeline-wrapper">
+            <!-- Timeline items will be generated here by JavaScript -->
         </div>
     </div>
 
     <script>
         const timelineData = <?php echo json_encode($timeline_data); ?>;
-        const timeline = document.getElementById('timeline');
-        const checkboxes = document.querySelectorAll('.kingdom-filter');
-        const selectAllCheckbox = document.getElementById('select-all');
+        const timelineWrapper = document.getElementById('timeline-wrapper');
+        const filterContainer = document.querySelector('.kingdom-filters');
 
-        // ฟังก์ชันเพื่อจัดกลุ่มข้อมูลตามช่วงปี
-        function groupByYearRange(data, range) {
-            const groupedData = {};
-            data.forEach(item => {
-                const startYear = Math.floor(item.reignstart / range) * range;
-                const endYear = startYear + range - 1;
-                const key = `${startYear} - ${endYear}`;
-                if (!groupedData[key]) {
-                    groupedData[key] = [];
-                }
-                groupedData[key].push(item);
+        function renderCheckboxes() {
+            const kingdoms = [...new Set(timelineData.map(item => item.kingdomname))];
+            kingdoms.forEach(kingdom => {
+                const label = document.createElement('label');
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.value = kingdom;
+                checkbox.checked = true;
+                checkbox.addEventListener('change', renderTimeline);
+                label.appendChild(checkbox);
+                label.appendChild(document.createTextNode(kingdom));
+                filterContainer.appendChild(label);
             });
-            return groupedData;
-        }
 
-        // ฟังก์ชันเพื่อแสดงไทม์ไลน์
-        function renderTimeline(filteredData) {
-            const groupedData = groupByYearRange(filteredData, 100); // เปลี่ยนช่วงเวลาได้ตามต้องการ เช่น 50 ปี
-            timeline.innerHTML = ''; // ล้างข้อมูลเก่าออก
-
-            Object.keys(groupedData).forEach(range => {
-                const rangeSection = document.createElement('div');
-                rangeSection.classList.add('timeline-range');
-                rangeSection.innerHTML = `<h2>${range}</h2>`;
-                
-                groupedData[range].forEach(item => {
-                    const timelineItem = document.createElement('div');
-                    timelineItem.classList.add('timeline-item');
-                    timelineItem.innerHTML = `
-                        <h3>${item.name}</h3>
-                        <p>${item.kingdomname}</p>
-                        <p>ปกครอง : พ.ศ. ${item.reignstart ? item.reignstart : 'ไม่ปรากฏ'} - พ.ศ. ${item.reignend ? item.reignend : 'ไม่ปรากฏ'}</p>
-                        <p>ราชวงศ์ : ${item.monarch ? item.monarch : 'ไม่ปรากฎ'}</p>
-                    `;
-                    rangeSection.appendChild(timelineItem);
+            // Add select all checkbox functionality
+            document.getElementById('select-all').addEventListener('change', (e) => {
+                const isChecked = e.target.checked;
+                document.querySelectorAll('.kingdom-filters input[type=checkbox]').forEach(checkbox => {
+                    checkbox.checked = isChecked;
                 });
-
-                timeline.appendChild(rangeSection);
+                renderTimeline();
             });
-
-            updateArrows();
         }
 
-        function filterTimeline() {
-            const selectedKingdoms = Array.from(checkboxes)
+        function renderTimeline() {
+            // Clear the current timeline
+            timelineWrapper.innerHTML = '';
+
+            // Get selected kingdoms
+            const selectedKingdoms = [...filterContainer.querySelectorAll('input[type=checkbox]:not(#select-all)')]
                 .filter(checkbox => checkbox.checked)
                 .map(checkbox => checkbox.value);
 
-            const filteredData = timelineData.filter(item => selectedKingdoms.includes(item.kingdomname));
-            renderTimeline(filteredData);
-        }
+            // Filter data based on selected kingdoms and reign start year
+            const filteredData = timelineData.filter(item =>
+                item.reignstart !== null && selectedKingdoms.includes(item.kingdomname)
+            );
 
-        function updateArrows() {
-            arrowLeft.disabled = timeline.scrollLeft === 0;
-            arrowRight.disabled = timeline.scrollLeft + timeline.clientWidth >= timeline.scrollWidth;
-        }
-        
+            // Group data by reign start year
+            const groupedData = {};
+            filteredData.forEach(item => {
+                const startYear = item.reignstart;
+                if (!groupedData[startYear]) {
+                    groupedData[startYear] = [];
+                }
+                groupedData[startYear].push(item);
+            });
 
-        timeline.addEventListener('scroll', updateArrows);
+            // Generate timeline elements
+            Object.keys(groupedData).forEach(year => {
+                const group = groupedData[year];
+                const groupDiv = document.createElement('div');
+                groupDiv.classList.add('timeline-group');
+
+                // Add the year label
+                const yearLabel = document.createElement('div');
+                yearLabel.classList.add('year-label');
+                yearLabel.innerText = `พ.ศ. ${year}`;
+                groupDiv.appendChild(yearLabel);
+
+                // Add a container for timeline items
+                const itemsDiv = document.createElement('div');
+                itemsDiv.classList.add('timeline-items');
+
+                // Add ruler items
+                group.forEach(item => {
+                    const itemDiv = document.createElement('div');
+                    itemDiv.classList.add('timeline-item');
+
+                    itemDiv.innerHTML = 
+                        `<h3>${item.name}</h3>
+                        <p>${item.kingdomname}</p>
+                        <p>ปกครอง : พ.ศ. ${item.reignstart} - พ.ศ. ${item.reignend}</p>
+                        <p>ราชวงศ์ : ${item.monarch}</p>`;
+
+                    itemsDiv.appendChild(itemDiv);
+                });
+
+                groupDiv.appendChild(itemsDiv);
+                timelineWrapper.appendChild(groupDiv);
+            });
+        }
 
         // Initial render
-        filterTimeline();
-
-        // Add event listeners to checkboxes
-        checkboxes.forEach(checkbox => {
-            checkbox.addEventListener('change', filterTimeline);
-        });
-
-        // "Select All" functionality
-        selectAllCheckbox.addEventListener('change', () => {
-            const isChecked = selectAllCheckbox.checked;
-            checkboxes.forEach(checkbox => {
-                checkbox.checked = isChecked;
-            });
-            filterTimeline();
-        });
+        renderCheckboxes();
+        renderTimeline();
     </script>
 </body>
 </html>
+
+
