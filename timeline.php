@@ -105,7 +105,7 @@ $desired_order = [
     'กรุงรัตนโกสินทร์'
 ];
 
-usort($kingdoms, function($a, $b) use ($desired_order) {
+usort($kingdoms, function ($a, $b) use ($desired_order) {
     $pos_a = array_search($a, $desired_order);
     $pos_b = array_search($b, $desired_order);
     return $pos_a - $pos_b;
@@ -114,10 +114,11 @@ usort($kingdoms, function($a, $b) use ($desired_order) {
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Horizontal Timeline with Overlapping Rulers</title>
+    <title>Timeline with Timestamps</title>
     <style>
         body {
             font-family: 'Helvetica Neue', Arial, sans-serif;
@@ -172,11 +173,12 @@ usort($kingdoms, function($a, $b) use ($desired_order) {
         .container {
             max-width: 1200px;
             margin: 30px auto;
-            padding: 0 20px;
+            padding: 20px;
             background-color: #ffffff;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
             border-radius: 8px;
-            padding: 20px;
+            overflow-x: auto;
+            /* Enable horizontal scrolling */
         }
 
         .select-all-container {
@@ -215,77 +217,118 @@ usort($kingdoms, function($a, $b) use ($desired_order) {
             background-color: #dee2e6;
         }
 
+        .color-legend {
+            margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .color-legend div {
+            display: flex;
+            align-items: center;
+        }
+
+        .color-legend div div {
+            width: 20px;
+            height: 20px;
+            margin-right: 10px;
+        }
+
         .timeline-wrapper {
+            display: flex;
+            flex-direction: column;
             position: relative;
-            overflow-x: auto;
-            white-space: nowrap;
             padding: 20px;
             background-color: #e9ecef;
             border-radius: 10px;
             box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-
-        .timeline-group {
-            display: flex;
-            flex-direction: row;
-            align-items: flex-start;
-            margin-bottom: 30px;
-            position: relative;
-        }
-
-        .timeline-group .year-label {
-            margin-right: 20px; /* Space between year label and items */
-            font-weight: bold;
-            color: #4a90e2;
-            font-size: 16px;
-            text-align: center;
-            text-transform: uppercase;
-            width: 80px; /* Fixed width for year label */
-        }
-
-        .timeline-items {
-            display: flex;
-            flex-direction: row;
-            flex-wrap: nowrap;
             overflow-x: auto;
-            gap: 15px;
+            /* Enable horizontal scrolling */
         }
 
         .timeline-item {
-            position: relative;
-            padding: 15px;
             border: 1px solid #ced4da;
             border-radius: 8px;
             background-color: #ffffff;
             text-align: center;
-            min-width: 200px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            transition: transform 0.2s ease-in-out;
+            transition: transform 0.2s ease-in-out, z-index 0.2s ease;
+            white-space: nowrap;
+            /* Prevent text from wrapping */
+            overflow: hidden;
+            /* Hide overflow text */
+            text-overflow: ellipsis;
+            /* Show ellipsis for overflow text */
+            padding: 10px;
+            font-size: 12px;
+            min-width: 80px;
+            position: absolute;
+            z-index: 1;
         }
 
         .timeline-item:hover {
             transform: translateY(-5px);
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            z-index: 10;
+            /* Bring the item to the top */
+        }
+
+
+        .timeline-items .timeline-item {
+            border: 1px solid #ced4da;
+            border-radius: 8px;
+            background-color: #ffffff;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease-in-out;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            padding: 10px;
+            font-size: 12px;
+            min-width: 80px;
+            position: absolute;
+            z-index: 1;
         }
 
         .timeline-item h3 {
-            margin: 0 0 10px 0;
-            font-size: 18px;
+            margin: 0;
+            font-size: 14px;
             color: #333;
+            overflow: hidden;
+            /* Hide overflow */
+            text-overflow: ellipsis;
+            /* Show ellipsis */
+            white-space: nowrap;
+            /* Prevent text from wrapping */
         }
 
         .timeline-item p {
-            margin: 5px 0;
-            font-size: 14px;
-            color: #6c757d;
+            margin: 2px 0;
+            font-size: 12px;
+            color: #333;
+            overflow: hidden;
+            /* Hide overflow */
+            text-overflow: ellipsis;
+            /* Show ellipsis */
+            white-space: nowrap;
+            /* Prevent text from wrapping */
         }
 
         .timeline-item p:last-child {
             font-weight: bold;
-            color: #007bff;
+            color: #333;
+        }
+
+        .timeline-item .timestamp {
+            font-size: 12px;
+            color: #888;
+            margin-top: 5px;
         }
     </style>
 </head>
+
 <body>
     <header>
         <h1>Timeline</h1>
@@ -305,104 +348,170 @@ usort($kingdoms, function($a, $b) use ($desired_order) {
         <div class="kingdom-filters">
             <!-- Checkboxes for kingdoms will be dynamically generated here -->
         </div>
+        <div class="color-legend">
+            <!-- Legend will be dynamically generated here -->
+        </div>
         <div class="timeline-wrapper" id="timeline-wrapper">
-            <!-- Timeline items will be generated here by JavaScript -->
+            <!-- Timeline rows will be generated here by JavaScript -->
         </div>
     </div>
 
     <script>
-        const timelineData = <?php echo json_encode($timeline_data); ?>;
-        const timelineWrapper = document.getElementById('timeline-wrapper');
-        const filterContainer = document.querySelector('.kingdom-filters');
+        document.addEventListener('DOMContentLoaded', () => {
+            const timelineData = <?php echo json_encode($timeline_data); ?>;
+            const timelineWrapper = document.getElementById('timeline-wrapper');
+            const filterContainer = document.querySelector('.kingdom-filters');
+            const colorLegendContainer = document.querySelector('.color-legend');
 
-        function renderCheckboxes() {
-            const kingdoms = [...new Set(timelineData.map(item => item.kingdomname))];
-            kingdoms.forEach(kingdom => {
-                const label = document.createElement('label');
-                const checkbox = document.createElement('input');
-                checkbox.type = 'checkbox';
-                checkbox.value = kingdom;
-                checkbox.checked = true;
-                checkbox.addEventListener('change', renderTimeline);
-                label.appendChild(checkbox);
-                label.appendChild(document.createTextNode(kingdom));
-                filterContainer.appendChild(label);
-            });
+            function renderCheckboxes() {
+                const kingdoms = [...new Set(timelineData.map(item => item.kingdomname))];
+                kingdoms.forEach((kingdom, index) => {
+                    const label = document.createElement('label');
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.value = kingdom;
+                    checkbox.checked = true;
+                    checkbox.id = `kingdom-${index}`;
+                    checkbox.addEventListener('change', debounce(renderTimeline, 300));
 
-            // Add select all checkbox functionality
-            document.getElementById('select-all').addEventListener('change', (e) => {
-                const isChecked = e.target.checked;
-                document.querySelectorAll('.kingdom-filters input[type=checkbox]').forEach(checkbox => {
-                    checkbox.checked = isChecked;
-                });
-                renderTimeline();
-            });
-        }
+                    label.setAttribute('for', checkbox.id);
+                    label.appendChild(checkbox);
+                    label.appendChild(document.createTextNode(kingdom));
+                    filterContainer.appendChild(label);
 
-        function renderTimeline() {
-            // Clear the current timeline
-            timelineWrapper.innerHTML = '';
-
-            // Get selected kingdoms
-            const selectedKingdoms = [...filterContainer.querySelectorAll('input[type=checkbox]:not(#select-all)')]
-                .filter(checkbox => checkbox.checked)
-                .map(checkbox => checkbox.value);
-
-            // Filter data based on selected kingdoms and reign start year
-            const filteredData = timelineData.filter(item =>
-                item.reignstart !== null && selectedKingdoms.includes(item.kingdomname)
-            );
-
-            // Group data by reign start year
-            const groupedData = {};
-            filteredData.forEach(item => {
-                const startYear = item.reignstart;
-                if (!groupedData[startYear]) {
-                    groupedData[startYear] = [];
-                }
-                groupedData[startYear].push(item);
-            });
-
-            // Generate timeline elements
-            Object.keys(groupedData).forEach(year => {
-                const group = groupedData[year];
-                const groupDiv = document.createElement('div');
-                groupDiv.classList.add('timeline-group');
-
-                // Add the year label
-                const yearLabel = document.createElement('div');
-                yearLabel.classList.add('year-label');
-                yearLabel.innerText = `พ.ศ. ${year}`;
-                groupDiv.appendChild(yearLabel);
-
-                // Add a container for timeline items
-                const itemsDiv = document.createElement('div');
-                itemsDiv.classList.add('timeline-items');
-
-                // Add ruler items
-                group.forEach(item => {
-                    const itemDiv = document.createElement('div');
-                    itemDiv.classList.add('timeline-item');
-
-                    itemDiv.innerHTML = 
-                        `<h3>${item.name}</h3>
-                        <p>${item.kingdomname}</p>
-                        <p>ปกครอง : พ.ศ. ${item.reignstart} - พ.ศ. ${item.reignend}</p>
-                        <p>ราชวงศ์ : ${item.monarch}</p>`;
-
-                    itemsDiv.appendChild(itemDiv);
+                    const legendItem = document.createElement('div');
+                    legendItem.style.display = 'flex';
+                    legendItem.style.alignItems = 'center';
+                    legendItem.style.marginRight = '20px';
+                    legendItem.style.fontSize = '16px';
+                    legendItem.style.fontWeight = 'bold';
+                    legendItem.style.textAlign = 'center';
+                    legendItem.innerHTML = `
+                        <div style="background-color: ${getColorForKingdom(kingdom)}; width: 20px; height: 20px; border-radius: 50%;"></div>
+                        <span style="margin-left: 10px;">${kingdom}</span>
+                    `;
+                    colorLegendContainer.appendChild(legendItem);
                 });
 
-                groupDiv.appendChild(itemsDiv);
-                timelineWrapper.appendChild(groupDiv);
-            });
-        }
+                document.getElementById('select-all').addEventListener('change', (e) => {
+                    const isChecked = e.target.checked;
+                    document.querySelectorAll('.kingdom-filters input[type=checkbox]').forEach(checkbox => {
+                        checkbox.checked = isChecked;
+                    });
+                    renderTimeline();
+                });
+            }
 
-        // Initial render
-        renderCheckboxes();
-        renderTimeline();
+            function renderTimeline() {
+                timelineWrapper.innerHTML = '';
+                const selectedKingdoms = Array.from(document.querySelectorAll('.kingdom-filters input[type=checkbox]'))
+                    .filter(checkbox => checkbox.checked)
+                    .map(checkbox => checkbox.value);
+
+                const filteredData = timelineData.filter(item =>
+                    item.reignstart !== null && selectedKingdoms.includes(item.kingdomname)
+                );
+
+                filteredData.sort((a, b) => a.reignstart - b.reignstart);
+
+                const allYears = filteredData.flatMap(item => [item.reignstart, item.reignend]);
+                const minYear = Math.min(...allYears);
+                const maxYear = Math.max(...allYears);
+
+                const totalYears = maxYear - minYear + 1;
+
+                const timelineItems = document.createElement('div');
+                timelineItems.classList.add('timeline-items');
+
+                const kingdoms = [...new Set(filteredData.map(item => item.kingdomname))];
+                kingdoms.forEach((kingdom, index) => {
+                    const rowDiv = document.createElement('div');
+                    rowDiv.classList.add('timeline-items');
+                    rowDiv.style.marginBottom = '60px';
+                    rowDiv.style.paddingTop = '30px';
+                    rowDiv.style.position = 'relative';
+
+                    const kingdomLabel = document.createElement('div');
+                    kingdomLabel.classList.add('kingdom-label');
+                    kingdomLabel.textContent = kingdom;
+                    kingdomLabel.style.position = 'absolute';
+                    kingdomLabel.style.left = '0px';
+                    kingdomLabel.style.top = '50%';
+                    kingdomLabel.style.transform = 'translateY(-50%)';
+                    kingdomLabel.style.fontWeight = 'bold';
+                    kingdomLabel.style.fontSize = '18px';
+                    kingdomLabel.style.color = '#333';
+
+                    rowDiv.appendChild(kingdomLabel);
+
+                    const items = filteredData.filter(item => item.kingdomname === kingdom);
+                    items.forEach(item => {
+                        const itemDiv = document.createElement('div');
+                        itemDiv.classList.add('timeline-item');
+                        itemDiv.style.left = `${getPositionLeft(item.reignstart)}px`;
+                        itemDiv.style.width = `${getWidth(item.reignstart, item.reignend)}px`;
+                        itemDiv.style.backgroundColor = getColorForKingdom(item.kingdomname);
+
+                        itemDiv.innerHTML = `
+                <h3>${item.name}</h3>
+                <p>${item.kingdomname}</p>
+                <p>พ.ศ. ${item.reignstart} - พ.ศ. ${item.reignend}</p>
+            `;
+
+                        // Add mouseenter and mouseleave event listeners
+                        itemDiv.addEventListener('mouseenter', () => {
+                            itemDiv.style.zIndex = '999'; // Bring item to the front
+                        });
+
+                        itemDiv.addEventListener('mouseleave', () => {
+                            itemDiv.style.zIndex = '1'; // Reset to default zIndex
+                        });
+
+                        rowDiv.appendChild(itemDiv);
+                    });
+
+                    timelineItems.appendChild(rowDiv);
+                });
+
+                timelineWrapper.appendChild(timelineItems);
+            }
+
+
+
+            function getPositionLeft(year) {
+                const baseYear = 605;
+                const yearWidth = 60;
+                return (year - baseYear) * yearWidth;
+            }
+
+            function getWidth(startYear, endYear) {
+                const yearWidth = 60;
+                return (endYear - startYear + 1) * yearWidth;
+            }
+            function getColorForKingdom(kingdom) {
+                const colors = [
+                    "#FFA07A", "#DDA0DD", "#88B04B", "#F5DEB3", "#92A8D1", "#F6C3C1", "#FFCC00",
+                    "#C39BD3", "#76D7C4", "#F1948A", "#F7DC6F", "#85C1E9", "#D5DBDB", "#48C9B0",
+                    "#AF7AC5", "#5499C7", "#F0B27A", "#1ABC9C", "#A569BD", "#DC7633"
+                ];
+                const kingdoms = [...new Set(timelineData.map(item => item.kingdomname))];
+                const index = kingdoms.indexOf(kingdom);
+                return colors[index % colors.length];
+            }
+
+
+            function debounce(func, delay) {
+                let timeout;
+                return (...args) => {
+                    clearTimeout(timeout);
+                    timeout = setTimeout(() => func.apply(this, args), delay);
+                };
+            }
+
+            renderCheckboxes();
+            renderTimeline();
+        });
     </script>
 </body>
+
 </html>
-
-
