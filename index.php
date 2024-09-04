@@ -404,31 +404,44 @@ try {
         }
 
         function convertToCE(buddhistYear) {
-            return buddhistYear !== null ? buddhistYear - 543 : 'ไม่ปรากฏ';
-        }
+        return buddhistYear !== null ? buddhistYear - 543 : 'ไม่ปรากฏ';
+    }
 
-        var map = L.map('map', {
-            scrollWheelZoom: false,
-            doubleClickZoom: false,
-            dragging: true,
-            zoomControl: true,
-            boxZoom: false,
-            touchZoom: false
-        }).setView([12.923828640427846, 100.8822441508516], 6);
+    var map = L.map('map', {
+        scrollWheelZoom: false,
+        doubleClickZoom: false,
+        dragging: true,
+        zoomControl: true,
+        boxZoom: false,
+        touchZoom: false
+    }).setView([12.923828640427846, 100.8822441508516], 6);
 
-        L.tileLayer('https://api.maptiler.com/maps/streets-v2/{z}/{x}/{y}.png?key=Qy0caTTPn0K7S8WaoZ1d', {
-            attribution: '<a href="https://www.maptiler.com/copyright/" target="_blank">&copy; MapTiler</a> <a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>'
-        }).addTo(map);
+    L.tileLayer('https://api.maptiler.com/maps/streets-v2/{z}/{x}/{y}.png?key=Qy0caTTPn0K7S8WaoZ1d', {
+        attribution: '<a href="https://www.maptiler.com/copyright/" target="_blank">&copy; MapTiler</a> <a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>'
+    }).addTo(map);
 
-        var locations = <?php echo $locationsJson; ?>;
+    var locations = <?php echo $locationsJson; ?>;
 
-        if (Array.isArray(locations) && locations.length) {
-            locations.forEach(function(location) {
-                if (location.latitude && location.longitude) {
-                    var reignStartCE = convertToCE(location.reignstart);
-                    var reignEndCE = convertToCE(location.reignend);
+    if (Array.isArray(locations) && locations.length) {
+        // สร้าง Object เพื่อจัดการกับตำแหน่งที่ซ้ำกัน
+        var markersMap = {};
 
-                    var popupContent = `
+        // เพิ่มค่า latitude สำหรับแต่ละ Marker ที่ซ้ำกัน
+        locations.forEach(function (location) {
+            if (location.latitude && location.longitude) {
+                var reignStartCE = convertToCE(location.reignstart);
+                var reignEndCE = convertToCE(location.reignend);
+
+                var key = location.latitude + ',' + location.longitude + ',' + location.kingdomname;
+
+                if (!markersMap[key]) {
+                    markersMap[key] = [];
+                }
+
+                markersMap[key].push({
+                    reignStartCE: reignStartCE,
+                    reignEndCE: reignEndCE,
+                    popupContent: `
                         <div style="text-align: center;">
                             <img src="${location.imgplace}" alt="${location.name}" style="width: 200px; height: auto; margin-bottom: 8px;">
                             <p style="margin-top: 8px;">
@@ -444,17 +457,32 @@ try {
                             <p>ปกครอง : พ.ศ. ${location.reignstart ? location.reignstart : 'ไม่ปรากฏ'} - พ.ศ. ${location.reignend ? location.reignend : 'ไม่ปรากฏ'}</p>
                             <p>ปกครอง : ค.ศ. ${reignStartCE} - ค.ศ. ${reignEndCE}</p>
                         </div>
-                    `;
+                    `
+                });
+            } else {
+                console.warn('Invalid location data:', location);
+            }
+        });
 
-                    L.marker([location.latitude, location.longitude]).addTo(map)
-                        .bindPopup(popupContent);
-                } else {
-                    console.warn('Invalid location data:', location);
-                }
+        // แสดง Marker บนแผนที่
+        Object.keys(markersMap).forEach(function (key) {
+            var parts = key.split(',');
+            var baseLatitude = parseFloat(parts[0]);
+            var baseLongitude = parseFloat(parts[1]);
+            var kingdomName = parts[2];
+
+            markersMap[key].forEach(function (markerData, index) {
+                var latitude = baseLatitude + (index * 0.5); // เพิ่มค่า latitude เพื่อแยก Marker ที่ซ้อนกัน
+                var longitude = baseLongitude;
+
+                L.marker([latitude, longitude])
+                    .bindPopup(markerData.popupContent)
+                    .addTo(map);
             });
-        } else {
-            console.warn('No location data available.');
-        }
+        });
+    } else {
+        console.warn('No location data available.');
+    }
 
         // "Select All" functionality
         document.getElementById('selectAll').addEventListener('change', function() {
