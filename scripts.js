@@ -49,9 +49,9 @@ document.addEventListener("DOMContentLoaded", function() {
                 }
 
                 const translateGender = (gender) => {
-                    if (gender === 'male') {
+                    if (gender === 'Male') {
                         return 'ชาย';
-                    } else if (gender === 'female') {
+                    } else if (gender === 'Female') {
                         return 'หญิง';
                     } else {
                         return gender;
@@ -88,7 +88,7 @@ document.addEventListener("DOMContentLoaded", function() {
                         layout: OrgChart.tree,    
                         mouseScrool: OrgChart.none,
                         align: OrgChart.ORIENTATION,
-                        keyNavigation: true,
+                        keyNavigation: false,
                         filterBy: ['เพศ', 'ราชวงศ์'],
                         editForm: {
                             buttons: {
@@ -119,6 +119,81 @@ document.addEventListener("DOMContentLoaded", function() {
                         enableSearch: true,
                         searchFields: ["ชื่อ"],
                         
+                    });
+
+                    chart.filterUI.on('add-filter', function(sender, args){
+                        var names = Object.keys(sender.filterBy);
+                        var index = names.indexOf(args.name);
+                        if (index == names.length - 1) {
+                            args.html += `<div data-btn-reset style="color: #039BE5;">reset</div>`;
+                        }  
+                    });
+                    chart.filterUI.on('add-item', function(sender, args){
+                        var count = 0;
+                        var totalCount = 0;
+                        for (var i = 0; i < sender.instance.config.nodes.length; i++){
+                            var data = sender.instance.config.nodes[i];      
+                            if (data[args.name] != undefined){
+                                totalCount++;
+                    
+                                if (data[args.name] == args.value){            
+                                    count++;    
+                                }            
+                            }
+                        }
+                    
+                        var dataAllAttr = '';
+                        if (args.text == '[All]'){
+                            count = totalCount;
+                            dataAllAttr = 'data-all';
+                        }
+                        args.html = `<div class="filter-item">
+                                        <input ${dataAllAttr} type="checkbox" id="${args.value}" name="${args.value}" ${args.checked ? 'checked' : ''}>
+                                        <label for="${args.value}">${args.text} (${count})</label>
+                                    </div>`;
+                    });
+                    chart.filterUI.on('update', function(sender, args){
+                        var btnResetElement = sender.element.querySelector('[data-btn-reset]');
+                        btnResetElement.addEventListener('click', function(e){
+                            sender.filterBy = null;
+                            sender.update();
+                            sender.instance.draw();
+                        });
+                    });
+                    
+                    chart.filterUI.on('show-items', function(sender, args){
+                        var filterItemElements = sender.element.querySelectorAll('.filter-item');
+                        for(var i = 0; i < filterItemElements.length; i++){        
+                            filterItemElements[i].addEventListener('mouseenter', function(e){
+                                var val = e.target.querySelector('input').id;           
+                                if (val != args.name){//[All]
+                                    for(var j = 0; j < sender.instance.config.nodes.length; j++){
+                                        var data = sender.instance.config.nodes[j];
+                                        if (data[args.name] == val){
+                                            var nodeElement = sender.instance.getNodeElement(data.id);
+                                            nodeElement.classList.add('filter-item-hovered');
+                                        }
+                                    }
+                                }
+                            });
+                            
+                            filterItemElements[i].addEventListener('mouseleave', function(e){
+                                var val = e.target.querySelector('input').id;           
+                                if (val != args.name){//[All]
+                                    for(var j = 0; j < sender.instance.config.nodes.length; j++){
+                                        var data = sender.instance.config.nodes[j];
+                                        if (data[args.name] == val){
+                                            var nodeElement = sender.instance.getNodeElement(data.id);
+                                            nodeElement.classList.remove('filter-item-hovered');
+                                        }
+                                    }
+                                }
+                            });
+                        }
+                    });
+                    
+                    chart.onInit(function(args){
+                        this.filterUI.show('title');
                     });
 
                     chart.on('render-link', function(sender, args) {

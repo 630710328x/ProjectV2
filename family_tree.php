@@ -56,7 +56,7 @@
         #tree {
             width: 100%;
             height: 85.5vh;
-            border: 1px solid #ccc;
+            border: 0px solid #ccc;
         }
 
         .orgchart .node img {
