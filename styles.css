@@ -814,3 +814,499 @@ document.addEventListener('DOMContentLoaded', () => {
     renderCheckboxes();
     renderTimeline();
 });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<body>
+    <header>
+        <h1>Timeline</h1>
+        <nav>
+            <ul>
+                <li><a href="index.php">Home</a></li>
+                <li><a href="family_tree.php">Family Tree</a></li>
+                <li><a href="timeline.php" class="active">Timeline</a></li>
+            </ul>
+        </nav>
+    </header>
+    <div class="container">
+        <div class="select-all-container">
+            <input type="checkbox" id="select-all" checked>
+            <label for="select-all">เลือกทั้งหมด</label>
+        </div>
+        <div class="kingdom-filters">
+            <!-- Checkboxes for kingdoms will be dynamically generated here -->
+        </div>
+        <div class="color-legend">
+            <!-- Legend will be dynamically generated here -->
+        </div>
+        <div class="timeline-wrapper" id="timeline-wrapper">
+            <!-- Timeline rows will be generated here by JavaScript -->
+        </div>
+    </div>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+    const timelineData = <?php echo json_encode($timeline_data); ?>;
+    const timelineWrapper = document.getElementById('timeline-wrapper');
+    const filterContainer = document.querySelector('.kingdom-filters');
+    const colorLegendContainer = document.querySelector('.color-legend');
+    const selectAllCheckbox = document.getElementById('select-all');
+
+    function renderCheckboxes() {
+        const kingdoms = [...new Set(timelineData.map(item => item.kingdomname))];
+        kingdoms.forEach((kingdom, index) => {
+            const label = document.createElement('label');
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.value = kingdom;
+            checkbox.checked = true;
+            checkbox.id = `kingdom-${index}`;
+            checkbox.addEventListener('change', debounce(handleCheckboxChange, 300));
+
+            label.setAttribute('for', checkbox.id);
+            label.appendChild(checkbox);
+            label.appendChild(document.createTextNode(kingdom));
+            filterContainer.appendChild(label);
+
+            const legendItem = document.createElement('div');
+            legendItem.style.display = 'flex';
+            legendItem.style.alignItems = 'center';
+            legendItem.style.marginRight = '20px';
+            legendItem.style.fontSize = '16px';
+            legendItem.style.fontWeight = 'bold';
+            legendItem.style.textAlign = 'center';
+            legendItem.innerHTML = `
+                <div style="background-color: ${getColorForKingdom(kingdom)}; width: 20px; height: 20px; border-radius: 50%;"></div>
+                <span style="margin-left: 10px;">${kingdom}</span>
+            `;
+            colorLegendContainer.appendChild(legendItem);
+        });
+
+        selectAllCheckbox.checked = true;
+
+        selectAllCheckbox.addEventListener('change', (e) => {
+            const isChecked = e.target.checked;
+            document.querySelectorAll('.kingdom-filters input[type=checkbox]').forEach(checkbox => {
+                checkbox.checked = isChecked;
+            });
+            renderTimeline();
+        });
+    }
+
+    function handleCheckboxChange() {
+        const allCheckboxes = document.querySelectorAll('.kingdom-filters input[type=checkbox]');
+        const allChecked = Array.from(allCheckboxes).every(checkbox => checkbox.checked);
+        selectAllCheckbox.checked = allChecked;
+
+        renderTimeline();
+    }
+
+    function renderTimeline() {
+        timelineWrapper.innerHTML = '';
+        const selectedKingdoms = Array.from(document.querySelectorAll('.kingdom-filters input[type=checkbox]'))
+            .filter(checkbox => checkbox.checked)
+            .map(checkbox => checkbox.value);
+
+        const filteredData = timelineData.filter(item =>
+            item.reignstart !== null && selectedKingdoms.includes(item.kingdomname)
+        );
+
+        if (filteredData.length === 0) {
+            return;
+        }
+
+        // หา reignstart ที่น้อยที่สุดจากข้อมูลที่ถูกกรอง
+        const allYears = filteredData.flatMap(item => [item.reignstart, item.reignend]);
+        const minYearSelected = Math.min(...filteredData.map(item => item.reignstart));
+        const maxYear = Math.max(...allYears);
+
+        filteredData.sort((a, b) => a.reignstart - b.reignstart);
+
+        // อัพเดต year labels ตาม minYearSelected
+        renderYearLabels(minYearSelected, maxYear);
+
+        const timelineItems = document.createElement('div');
+        timelineItems.classList.add('timeline-items');
+
+        const kingdoms = [...new Set(filteredData.map(item => item.kingdomname))];
+        kingdoms.forEach((kingdom, index) => {
+            const rowDiv = document.createElement('div');
+            rowDiv.classList.add('timeline-items');
+            rowDiv.style.marginBottom = '80px';
+            rowDiv.style.paddingTop = '30px';
+            rowDiv.style.position = 'relative';
+
+            const kingdomLabel = document.createElement('div');
+            kingdomLabel.classList.add('kingdom-label');
+            kingdomLabel.textContent = kingdom;
+            kingdomLabel.style.position = 'absolute';
+            kingdomLabel.style.left = '0px';
+            kingdomLabel.style.top = '50%';
+            kingdomLabel.style.transform = 'translateY(-50%)';
+            kingdomLabel.style.fontWeight = 'bold';
+            kingdomLabel.style.fontSize = '18px';
+            kingdomLabel.style.color = '#333';
+
+            rowDiv.appendChild(kingdomLabel);
+
+            const items = filteredData.filter(item => item.kingdomname === kingdom);
+            items.forEach(item => {
+                const itemDiv = document.createElement('div');
+                itemDiv.classList.add('timeline-item');
+                itemDiv.style.left = `${getPositionLeft(item.reignstart, minYearSelected)}px`;
+                itemDiv.style.width = `${getWidth(item.reignstart, item.reignend)}px`;
+                itemDiv.style.backgroundColor = getColorForKingdom(item.kingdomname);
+
+                itemDiv.innerHTML = `
+                    <h3>${item.name}</h3>
+                    <p>พ.ศ. ${item.reignstart} - พ.ศ. ${item.reignend}</p>
+                `;
+
+                itemDiv.addEventListener('mouseenter', () => {
+                    itemDiv.style.zIndex = '999';
+                });
+
+                itemDiv.addEventListener('mouseleave', () => {
+                    itemDiv.style.zIndex = '1';
+                });
+
+                rowDiv.appendChild(itemDiv);
+            });
+
+            timelineItems.appendChild(rowDiv);
+        });
+
+        timelineWrapper.appendChild(timelineItems);
+    }
+
+    // Adjust renderYearLabels to start from minYearSelected
+    function renderYearLabels(minYear, maxYear) {
+        const yearContainer = document.createElement('div');
+        yearContainer.classList.add('year-labels');
+        yearContainer.style.position = 'relative';
+        yearContainer.style.height = '40px';
+        yearContainer.style.marginBottom = '20px';
+
+        const yearWidth = 60; // Display each year with 60px width
+        for (let year = minYear; year <= maxYear; year += 10) { // Show every 10 years
+            const yearDiv = document.createElement('div');
+            yearDiv.textContent = `พ.ศ. ${year}`;
+            yearDiv.style.position = 'absolute';
+            yearDiv.style.left = `${getPositionLeft(year, minYear)}px`;
+            yearDiv.style.transform = 'translateX(50%)';
+            yearDiv.style.fontWeight = 'bold';
+            yearDiv.style.fontSize = '14px';
+
+            yearContainer.appendChild(yearDiv);
+        }
+
+        timelineWrapper.appendChild(yearContainer);
+    }
+
+    function getPositionLeft(year, minYear) {
+        const yearWidth = 150; // Define how wide each year is represented
+        return (year - minYear) * yearWidth;
+    }
+
+    function getWidth(startYear, endYear) {
+        const yearWidth = 150;
+        return (endYear - startYear + 1) * yearWidth;
+    }
+
+    function getColorForKingdom(kingdom) {
+        const colors = [
+            "#FFA07A", "#DDA0DD", "#88B04B", "#F5DEB3", "#92A8D1", "#F6C3C1", "#FFCC00",
+            "#C39BD3", "#76D7C4", "#F1948A", "#F7DC6F", "#85C1E9", "#D5DBDB", "#48C9B0",
+            "#AF7AC5", "#5499C7", "#F0B27A", "#1ABC9C", "#A569BD", "#DC7633"
+        ];
+        const kingdoms = [...new Set(timelineData.map(item => item.kingdomname))];
+        const index = kingdoms.indexOf(kingdom);
+        return colors[index % colors.length];
+    }
+
+    function debounce(func, delay) {
+        let timeout;
+        return (...args) => {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(this, args), delay);
+        };
+    }
+
+    renderCheckboxes();
+    renderTimeline();
+});
+    </script>
+
+
+</body>
+
+
+
+
+
+
+
+
+
+<body>
+    <header>
+        <h1>Timeline</h1>
+        <nav>
+            <ul>
+                <li><a href="index.php">Home</a></li>
+                <li><a href="family_tree.php">Family Tree</a></li>
+                <li><a href="timeline.php" class="active">Timeline</a></li>
+            </ul>
+        </nav>
+    </header>
+    <div class="container">
+        <div class="select-all-container">
+            <input type="checkbox" id="select-all" checked>
+            <label for="select-all">เลือกทั้งหมด</label>
+        </div>
+        <button id="toggle-zoom">ดูภาพรวม</button>
+
+        <div class="kingdom-filters">
+            <!-- Checkboxes for kingdoms will be dynamically generated here -->
+        </div>
+        <div class="color-legend">
+            <!-- Legend will be dynamically generated here -->
+        </div>
+        <div class="timeline-wrapper" id="timeline-wrapper">
+            <!-- Timeline rows will be generated here by JavaScript -->
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const timelineData = <?php echo json_encode($timeline_data); ?>;
+            const timelineWrapper = document.getElementById('timeline-wrapper');
+            const filterContainer = document.querySelector('.kingdom-filters');
+            const colorLegendContainer = document.querySelector('.color-legend');
+            const selectAllCheckbox = document.getElementById('select-all');
+
+            let zoomLevel = 1;
+            const zoomFactor = 2; // ปรับระดับการซูม
+            let isZoomedOut = false; // ตรวจสอบสถานะการซูม
+            const toggleZoomButton = document.getElementById('toggle-zoom');
+
+            let minYearSelected, maxYear; // ประกาศตัวแปรเพื่อใช้ร่วมกันในการซูมและแสดง timeline
+
+            toggleZoomButton.addEventListener('click', () => {
+                if (isZoomedOut) {
+                    // ซูมเข้า (กลับไปดูแบบปกติ)
+                    zoomLevel = 1;
+                    toggleZoomButton.textContent = 'ดูภาพรวม';
+                } else {
+                    // ซูมออก (ดูแบบภาพรวม)
+                    zoomLevel = 1 / 2; // ใช้ 1/2 แทน 1/200 เพื่อให้ยังมองเห็นได้ชัดเจน
+                    toggleZoomButton.textContent = 'ดูแบบปกติ';
+                }
+                isZoomedOut = !isZoomedOut;
+                renderTimeline(); // เรียกใหม่ทุกครั้งที่เปลี่ยนระดับการซูม
+                renderYearLabels(minYearSelected, maxYear); // เรียกเพื่อให้ปรับ label ของปีใหม่
+            });
+
+            function renderCheckboxes() {
+                const kingdoms = [...new Set(timelineData.map(item => item.kingdomname))];
+                kingdoms.forEach((kingdom, index) => {
+                    const label = document.createElement('label');
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.value = kingdom;
+                    checkbox.checked = true;
+                    checkbox.id = `kingdom-${index}`;
+                    checkbox.addEventListener('change', debounce(handleCheckboxChange, 300));
+
+                    label.setAttribute('for', checkbox.id);
+                    label.appendChild(checkbox);
+                    label.appendChild(document.createTextNode(kingdom));
+                    filterContainer.appendChild(label);
+
+                    const legendItem = document.createElement('div');
+                    legendItem.style.display = 'flex';
+                    legendItem.style.alignItems = 'center';
+                    legendItem.style.marginRight = '20px';
+                    legendItem.style.fontSize = '16px';
+                    legendItem.style.fontWeight = 'bold';
+                    legendItem.style.textAlign = 'center';
+                    legendItem.innerHTML = `
+                        <div style="background-color: ${getColorForKingdom(kingdom)}; width: 20px; height: 20px; border-radius: 50%;"></div>
+                        <span style="margin-left: 10px;">${kingdom}</span>
+                    `;
+                    colorLegendContainer.appendChild(legendItem);
+                });
+
+                selectAllCheckbox.checked = true;
+
+                selectAllCheckbox.addEventListener('change', (e) => {
+                    const isChecked = e.target.checked;
+                    document.querySelectorAll('.kingdom-filters input[type=checkbox]').forEach(checkbox => {
+                        checkbox.checked = isChecked;
+                    });
+                    renderTimeline();
+                });
+            }
+
+            function handleCheckboxChange() {
+                const allCheckboxes = document.querySelectorAll('.kingdom-filters input[type=checkbox]');
+                const allChecked = Array.from(allCheckboxes).every(checkbox => checkbox.checked);
+                selectAllCheckbox.checked = allChecked;
+
+                renderTimeline();
+            }
+
+            function renderTimeline() {
+                timelineWrapper.innerHTML = '';
+                const selectedKingdoms = Array.from(document.querySelectorAll('.kingdom-filters input[type=checkbox]'))
+                    .filter(checkbox => checkbox.checked)
+                    .map(checkbox => checkbox.value);
+
+                const filteredData = timelineData.filter(item =>
+                    item.reignstart !== null && selectedKingdoms.includes(item.kingdomname)
+                );
+
+                if (filteredData.length === 0) {
+                    return;
+                }
+
+                const allYears = filteredData.flatMap(item => [item.reignstart, item.reignend]);
+                minYearSelected = Math.min(...filteredData.map(item => item.reignstart));
+                maxYear = Math.max(...allYears);
+
+                filteredData.sort((a, b) => a.reignstart - b.reignstart);
+
+                renderYearLabels(minYearSelected, maxYear); // Render ปีใหม่ทุกครั้งที่มีการซูม
+
+                const timelineItems = document.createElement('div');
+                timelineItems.classList.add('timeline-items');
+
+                const kingdoms = [...new Set(filteredData.map(item => item.kingdomname))];
+                kingdoms.forEach((kingdom, index) => {
+                    const rowDiv = document.createElement('div');
+                    rowDiv.classList.add('timeline-items');
+                    rowDiv.style.marginBottom = '80px';
+                    rowDiv.style.paddingTop = '30px';
+                    rowDiv.style.position = 'relative';
+
+                    const kingdomLabel = document.createElement('div');
+                    kingdomLabel.classList.add('kingdom-label');
+                    kingdomLabel.textContent = kingdom;
+                    kingdomLabel.style.position = 'absolute';
+                    kingdomLabel.style.left = '0px';
+                    kingdomLabel.style.top = '50%';
+                    kingdomLabel.style.transform = 'translateY(-50%)';
+                    kingdomLabel.style.fontWeight = 'bold';
+                    kingdomLabel.style.fontSize = '18px';
+                    kingdomLabel.style.color = '#333';
+
+                    rowDiv.appendChild(kingdomLabel);
+
+                    const items = filteredData.filter(item => item.kingdomname === kingdom);
+                    items.forEach(item => {
+                        const itemDiv = document.createElement('div');
+                        itemDiv.classList.add('timeline-item');
+                        itemDiv.style.left = `${getPositionLeft(item.reignstart, minYearSelected)}px`;
+                        itemDiv.style.width = `${getWidth(item.reignstart, item.reignend)}px`;
+                        itemDiv.style.backgroundColor = getColorForKingdom(item.kingdomname);
+
+                        itemDiv.innerHTML = `
+                            <h3>${item.name}</h3>
+                            <p>พ.ศ. ${item.reignstart} - พ.ศ. ${item.reignend}</p>
+                        `;
+
+                        itemDiv.addEventListener('mouseenter', () => {
+                            itemDiv.style.zIndex = '999';
+                        });
+
+                        itemDiv.addEventListener('mouseleave', () => {
+                            itemDiv.style.zIndex = '1';
+                        });
+
+                        rowDiv.appendChild(itemDiv);
+                    });
+
+                    timelineItems.appendChild(rowDiv);
+                });
+
+                timelineWrapper.appendChild(timelineItems);
+            }
+
+            function renderYearLabels(minYear, maxYear) {
+                if (isZoomedOut) {
+                    // ถ้าอยู่ในโหมดดูภาพรวม ไม่ต้องแสดง yearlabel
+                    return;
+                }
+
+                const yearContainer = document.createElement('div');
+                yearContainer.classList.add('year-labels');
+                yearContainer.style.position = 'relative';
+                yearContainer.style.height = '40px';
+                yearContainer.style.marginBottom = '20px';
+
+                const yearWidth = 150 * zoomLevel; // ปรับตามระดับการซูม
+                for (let year = minYear; year <= maxYear; year += 10) {
+                    const yearDiv = document.createElement('div');
+                    yearDiv.textContent = `พ.ศ. ${year}`;
+                    yearDiv.style.position = 'absolute';
+                    yearDiv.style.left = `${getPositionLeft(year, minYear)}px`;
+                    yearDiv.style.transform = 'translateX(50%)';
+                    yearDiv.style.fontWeight = 'bold';
+                    yearDiv.style.fontSize = '14px';
+
+                    yearContainer.appendChild(yearDiv);
+                }
+
+                timelineWrapper.appendChild(yearContainer); // เพิ่ม label ใหม่หลังจากลบของเดิม
+            }
+
+            function getPositionLeft(year, minYear) {
+                const yearWidth = 150 * zoomLevel; // ปรับตามระดับการซูม
+                return (year - minYear) * yearWidth;
+            }
+
+            function getWidth(startYear, endYear) {
+                const yearWidth = 150 * zoomLevel; // ปรับความกว้างตามระดับการซูม
+                return (endYear - startYear + 1) * yearWidth;
+            }
+
+            function getColorForKingdom(kingdom) {
+                const colors = [
+                    "#FFA07A", "#DDA0DD", "#88B04B", "#F5DEB3", "#92A8D1", "#F6C3C1", "#FFCC00",
+                    "#C39BD3", "#76D7C4", "#F1948A", "#F7DC6F", "#85C1E9", "#D5DBDB", "#48C9B0",
+                    "#AF7AC5", "#5499C7", "#F0B27A", "#1ABC9C", "#A569BD", "#DC7633"
+                ];
+                const kingdoms = [...new Set(timelineData.map(item => item.kingdomname))];
+                const index = kingdoms.indexOf(kingdom);
+                return colors[index % colors.length];
+            }
+
+            function debounce(func, wait) {
+                let timeout;
+                return function(...args) {
+                    const later = () => {
+                        clearTimeout(timeout);
+                        func.apply(this, args);
+                    };
+                    clearTimeout(timeout);
+                    timeout = setTimeout(later, wait);
+                };
+            }
+
+            renderCheckboxes();
+            renderTimeline();
+        });
+    </script>
+</body>
