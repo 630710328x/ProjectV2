@@ -71,6 +71,7 @@ try {
 
     // Prepare and execute queries for each table
     foreach ($tables as $table) {
+        // Check if we should reset or not perform any specific filtering
         if ($reset || ($inputYear === null && empty($inputName) && empty($inputRelationship))) {
             $stmt = $pdo->prepare("SELECT latitude, longitude, name, kingdomname, url, imgplace, reignstart, reignend, after, before, relationship FROM $table WHERE id = 1 LIMIT 1");
         } elseif (!empty($inputName)) {
@@ -78,8 +79,15 @@ try {
             $nameParam = '%' . $inputName . '%';
             $stmt->bindParam(':name', $nameParam, PDO::PARAM_STR);
         } elseif (!empty($inputRelationship)) {
-            $stmt = $pdo->prepare("SELECT latitude, longitude, name, kingdomname, url, imgplace, reignstart, reignend, after, before, relationship FROM $table WHERE position(:relationship in relationship) > 0 ORDER BY id ASC LIMIT 1");
+            // Query for รัชกาลที่ input and check for exact match
+            $stmt = $pdo->prepare("SELECT latitude, longitude, name, kingdomname, url, imgplace, reignstart, reignend, after, before, relationship 
+                                   FROM $table 
+                                   WHERE relationship = :relationship
+                                   OR relationship LIKE :relationshipWithTimes 
+                                   ORDER BY id ASC");
+            $relationshipWithTimes = '%' . $inputRelationship . ' ครั้งที่%' ;
             $stmt->bindParam(':relationship', $inputRelationship, PDO::PARAM_STR);
+            $stmt->bindParam(':relationshipWithTimes', $relationshipWithTimes, PDO::PARAM_STR);
         } elseif ($inputYear !== null) {
             $stmt = $pdo->prepare("SELECT latitude, longitude, name, kingdomname, url, imgplace, reignstart, reignend, after, before, relationship FROM $table WHERE :year BETWEEN reignstart AND reignend");
             $stmt->bindParam(':year', $inputYear, PDO::PARAM_INT);
@@ -87,21 +95,20 @@ try {
         $stmt->execute();
         $locations = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        // Append locations from the current table to the allLocations array
+        // Append normal search results to allLocations
         foreach ($locations as $location) {
             $allLocations[] = $location;
         }
     }
 
-
-
-    // Encode locations as JSON to pass to JavaScript
+    // Encode all results as JSON to pass to JavaScript
     $locationsJson = json_encode($allLocations);
 } catch (PDOException $e) {
     // Handle database connection error
     die("Database connection failed: " . $e->getMessage());
 }
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -359,7 +366,7 @@ try {
             document.getElementById('searchByName').style.display = searchType === 'name' ? 'block' : 'none';
         }
 
-        
+
         window.onload = function () {
             toggleSearchFields();
 

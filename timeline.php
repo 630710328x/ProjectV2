@@ -371,6 +371,7 @@ usort($kingdoms, function ($a, $b) use ($desired_order) {
             justify-content: center;
             margin-top: 20px;
         }
+        
     </style>
 </head>
 
@@ -396,6 +397,13 @@ usort($kingdoms, function ($a, $b) use ($desired_order) {
         <div class="color-legend">
             <!-- Legend will be dynamically generated here -->
         </div>
+        <div class="year-format-container">
+            <label for="year-format">เลือกรูปแบบปี:</label>
+            <select id="year-format">
+                <option value="buddhist" selected>พ.ศ.</option>
+                <option value="christian">ค.ศ.</option>
+            </select>
+        </div>
         <div class="button-container">
             <button id="toggle-zoom">ดูภาพรวม</button>
         </div>
@@ -411,6 +419,7 @@ usort($kingdoms, function ($a, $b) use ($desired_order) {
             const filterContainer = document.querySelector('.kingdom-filters');
             const colorLegendContainer = document.querySelector('.color-legend');
             const selectAllCheckbox = document.getElementById('select-all');
+            const yearFormatSelect = document.getElementById('year-format');
 
             let zoomLevel = 1;
             const zoomFactor = 2; // ปรับระดับการซูม
@@ -560,36 +569,47 @@ usort($kingdoms, function ($a, $b) use ($desired_order) {
             }
 
             function renderYearLabels(minYear, maxYear) {
-                // ลบ year labels เก่าทั้งหมด
                 const existingYearContainer = document.querySelector('.year-labels');
                 if (existingYearContainer) {
-                    existingYearContainer.remove(); // ลบออกถ้ามีการสร้าง label มาก่อน
+                    existingYearContainer.remove();
                 }
 
-                // สร้าง year labels ใหม่
                 const yearContainer = document.createElement('div');
                 yearContainer.classList.add('year-labels');
                 yearContainer.style.position = 'relative';
                 yearContainer.style.height = '40px';
                 yearContainer.style.marginBottom = '20px';
-                yearContainer.style.whiteSpace = 'nowrap'; // ทำให้ข้อความต่อกันในบรรทัดเดียว
+                yearContainer.style.whiteSpace = 'nowrap';
 
-                // สร้างปีในช่วงระยะเวลา minYear ถึง maxYear
-                const yearInterval = isZoomedOut ? 100 : 10; // ปรับช่วงปีตามโหมดซูม
+                const yearInterval = isZoomedOut ? 100 : 10;
+
                 for (let year = minYear; year <= maxYear; year += yearInterval) {
                     const yearDiv = document.createElement('div');
-                    yearDiv.textContent = `พ.ศ. ${year}`;
+                    yearDiv.textContent = formatYear(year);
                     yearDiv.style.position = 'absolute';
                     yearDiv.style.left = `${getPositionLeft(year, minYear)}px`;
-                    yearDiv.style.transform = 'translateX(20%)'; // ทำให้ตำแหน่งตัวเลขอยู่ตรงจุดที่ต้องการ
+                    yearDiv.style.transform = 'translateX(20%)';
                     yearDiv.style.fontWeight = 'bold';
-                    yearDiv.style.fontSize = isZoomedOut ? '12px' : '14px'; // ลดขนาดฟอนต์ถ้าอยู่ในโหมดภาพรวม
+                    yearDiv.style.fontSize = isZoomedOut ? '12px' : '14px';
                     yearContainer.appendChild(yearDiv);
                 }
 
-                // เพิ่ม yearContainer ไปที่ตำแหน่งที่ถูกต้องใน timeline
-                timelineWrapper.insertBefore(yearContainer, timelineWrapper.firstChild); // เพิ่มที่ด้านบนสุดของ timeline
+                timelineWrapper.insertBefore(yearContainer, timelineWrapper.firstChild);
             }
+
+            function formatYear(year) {
+                const format = yearFormatSelect.value;
+                if (format === 'buddhist') {
+                    return `พ.ศ. ${year}`;
+                } else {
+                    return `ค.ศ. ${year - 543}`; // แปลงปี พ.ศ. เป็น ค.ศ.
+                }
+            }
+
+            yearFormatSelect.addEventListener('change', () => {
+                renderTimeline(); // เรียก renderTimeline ใหม่เพื่ออัปเดตปี
+                renderYearLabels(minYearSelected, maxYear); // อัปเดต year labels
+            });
 
 
 
