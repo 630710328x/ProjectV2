@@ -85,7 +85,7 @@ try {
                                    WHERE relationship = :relationship
                                    OR relationship LIKE :relationshipWithTimes 
                                    ORDER BY id ASC");
-            $relationshipWithTimes = '%' . $inputRelationship . ' ครั้งที่%' ;
+            $relationshipWithTimes = '%' . $inputRelationship . ' ครั้งที่%';
             $stmt->bindParam(':relationship', $inputRelationship, PDO::PARAM_STR);
             $stmt->bindParam(':relationshipWithTimes', $relationshipWithTimes, PDO::PARAM_STR);
         } elseif ($inputYear !== null) {
@@ -417,14 +417,7 @@ try {
                 document.getElementById('searchType').value = 'year'; // Default value
                 toggleSearchFields();
             });
-            // ค้นหา button functionality
-            document.getElementById('searchButton').addEventListener('click', function () {
-                // รีเซ็ตสถานะเช็คบ็อกซ์ทั้งหมด
-                kingdomCheckboxes.forEach(checkbox => checkbox.checked = false);
-                selectAllCheckbox.checked = false;
 
-                // เพิ่มโค้ดค้นหาของคุณที่นี่
-            });
 
             // Display marker with ID 1
             var markerId1 = locations.find(location => location.id == 1);
@@ -493,22 +486,22 @@ try {
                         reignStartCE: reignStartCE,
                         reignEndCE: reignEndCE,
                         popupContent: `
-                        <div style="text-align: center;">
-                            <img src="${location.imgplace}" alt="${location.name}" style="width: 200px; height: auto; margin-bottom: 8px;">
-                            <p style="margin-top: 8px;">
-                                <a href="${location.url}" target="_blank">
-                                    <img src="https://logoeps.com/wp-content/uploads/2014/05/49360-wikipedia-logo-icon-vector-icon-vector-eps.png" alt="Wikipedia" style="width: 30px; height: auto; margin-right: 0px;">
-                                </a>
-                            </p>
-                            <h3 style="margin-bottom: 8px;">${location.kingdomname}</h3>
-                            <p>${location.relationship}</p>
-                            <p>พระนาม : ${location.name}</p>
-                            <p>พระองค์ก่อนหน้า : ${location.before ? location.before : 'ไม่ปรากฏ'}</p>
-                            <p>พระองค์ถัดไป : ${location.after ? location.after : 'ไม่ปรากฏ'}</p>
-                            <p>ปกครอง : พ.ศ. ${location.reignstart ? location.reignstart : 'ไม่ปรากฏ'} - พ.ศ. ${location.reignend ? location.reignend : 'ไม่ปรากฏ'}</p>
-                            <p>ปกครอง : ค.ศ. ${reignStartCE} - ค.ศ. ${reignEndCE}</p>
-                        </div>
-                    `
+                <div style="text-align: center;">
+                    <img src="${location.imgplace}" alt="${location.name}" style="width: 200px; height: auto; margin-bottom: 8px;">
+                    <p style="margin-top: 8px;">
+                        <a href="${location.url}" target="_blank">
+                            <img src="https://logoeps.com/wp-content/uploads/2014/05/49360-wikipedia-logo-icon-vector-icon-vector-eps.png" alt="Wikipedia" style="width: 30px; height: auto; margin-right: 0px;">
+                        </a>
+                    </p>
+                    <h3 style="margin-bottom: 8px;">${location.kingdomname}</h3>
+                    <p>${location.relationship}</p>
+                    <p>พระนาม : ${location.name}</p>
+                    <p>พระองค์ก่อนหน้า : ${location.before ? location.before : 'ไม่ปรากฏ'}</p>
+                    <p>พระองค์ถัดไป : ${location.after ? location.after : 'ไม่ปรากฏ'}</p>
+                    <p>ปกครอง : พ.ศ. ${location.reignstart ? location.reignstart : 'ไม่ปรากฏ'} - พ.ศ. ${location.reignend ? location.reignend : 'ไม่ปรากฏ'}</p>
+                    <p>ปกครอง : ค.ศ. ${reignStartCE} - ค.ศ. ${reignEndCE}</p>
+                </div>
+            `
                     });
                 } else {
                     console.warn('Invalid location data:', location);
@@ -523,17 +516,21 @@ try {
                 var kingdomName = parts[2];
 
                 markersMap[key].forEach(function (markerData, index) {
-                    var latitude = baseLatitude + (index * 0.25); // เพิ่มค่า latitude เพื่อแยก Marker ที่ซ้อนกัน
-                    var longitude = baseLongitude;
+                    var latitude = baseLatitude + (index * 0.15); // เพิ่มค่า latitude เพื่อแยก Marker ที่ซ้อนกัน
+                    var longitude = baseLongitude + (index * 0.15);
 
                     L.marker([latitude, longitude])
-                        .bindPopup(markerData.popupContent)
+                        .bindPopup(markerData.popupContent, {
+                            closeOnClick: false, // ไม่ปิด popup เมื่อคลิกที่ popup อื่น
+                            autoClose: false // ไม่ปิด popup อื่นเมื่อเปิด popup ใหม่
+                        })
                         .addTo(map);
                 });
             });
         } else {
             console.warn('No location data available.');
         }
+
 
         // "Select All" functionality
         document.getElementById('selectAll').addEventListener('change', function () {

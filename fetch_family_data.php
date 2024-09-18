@@ -13,7 +13,8 @@ $user = 'postgres';
 $pass = 'root';
 
 // Function to handle and output errors as JSON
-function handle_error($message) {
+function handle_error($message)
+{
     header('Content-Type: application/json');
     echo json_encode(['error' => $message]);
     exit;
@@ -29,15 +30,29 @@ if (!$conn) {
 $table = isset($_GET['table']) ? pg_escape_string($_GET['table']) : 'ratanakosin';
 
 // List of allowed table names
-$allowed_tables = ['ratanakosin', 'lanchang', 'sukothai', 'kamenravak', 'funan', 'srivichai', 
-                    'tampornling', 'janela', 'hripunchai', 'lanna', 'panakorn', 'lavo', 'ayuttaya'];
+$allowed_tables = [
+    'ratanakosin',
+    'lanchang',
+    'sukothai',
+    'kamenravak',
+    'funan',
+    'srivichai',
+    'tampornling',
+    'janela',
+    'hripunchai',
+    'lanna',
+    'panakorn',
+    'lavo',
+    'ayuttaya'
+];
 
 if (!in_array($table, $allowed_tables)) {
     handle_error('Invalid table name');
 }
 
 // Function to fetch data from a specified table
-function fetch_family_data($conn, $table) {
+function fetch_family_data($conn, $table)
+{
     $query = "SELECT id, parent_id, name, relationship, birth, death, img, tags, monarch, wife, child, father, mother, urlking, ppid, reignstart, reignend, gender FROM public.$table";
     $result = pg_query($conn, $query);
 

@@ -371,7 +371,43 @@ usort($kingdoms, function ($a, $b) use ($desired_order) {
             justify-content: center;
             margin-top: 20px;
         }
-        
+
+        select {
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-color: #007bff;
+            color: #fff;
+            padding: 10px 15px;
+            font-size: 16px;
+            font-weight: bold;
+            border: none;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        select:hover {
+            background-color: #0056b3;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        select:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.4);
+        }
+
+        select:disabled {
+            background-color: #e9ecef;
+            color: #888;
+            cursor: not-allowed;
+        }
+
+        select option {
+            background-color: #ffffff;
+            color: #333;
+        }
     </style>
 </head>
 
@@ -422,25 +458,22 @@ usort($kingdoms, function ($a, $b) use ($desired_order) {
             const yearFormatSelect = document.getElementById('year-format');
 
             let zoomLevel = 1;
-            const zoomFactor = 2; // ปรับระดับการซูม
-            let isZoomedOut = false; // ตรวจสอบสถานะการซูม
+            const zoomFactor = 2;
+            let isZoomedOut = false;
             const toggleZoomButton = document.getElementById('toggle-zoom');
-
-            let minYearSelected, maxYear; // ประกาศตัวแปรเพื่อใช้ร่วมกันในการซูมและแสดง timeline
+            let minYearSelected, maxYear;
 
             toggleZoomButton.addEventListener('click', () => {
                 if (isZoomedOut) {
-                    // ซูมเข้า (กลับไปดูแบบปกติ)
                     zoomLevel = 1;
                     toggleZoomButton.textContent = 'ดูภาพรวม';
                 } else {
-                    // ซูมออก (ดูแบบภาพรวม)
-                    zoomLevel = 1 / 120; // ใช้ 1/2 แทน 1/200 เพื่อให้ยังมองเห็นได้ชัดเจน
+                    zoomLevel = 1 / 60;
                     toggleZoomButton.textContent = 'ดูแบบปกติ';
                 }
                 isZoomedOut = !isZoomedOut;
-                renderTimeline(); // เรียกใหม่ทุกครั้งที่เปลี่ยนระดับการซูม
-                renderYearLabels(minYearSelected, maxYear); // เรียกเพื่อให้ปรับ label ของปีใหม่
+                renderTimeline();
+                renderYearLabels(minYearSelected, maxYear);
             });
 
             function renderCheckboxes() {
@@ -467,9 +500,9 @@ usort($kingdoms, function ($a, $b) use ($desired_order) {
                     legendItem.style.fontWeight = 'bold';
                     legendItem.style.textAlign = 'center';
                     legendItem.innerHTML = `
-                        <div style="background-color: ${getColorForKingdom(kingdom)}; width: 20px; height: 20px; border-radius: 50%;"></div>
-                        <span style="margin-left: 10px;">${kingdom}</span>
-                    `;
+                <div style="background-color: ${getColorForKingdom(kingdom)}; width: 20px; height: 20px; border-radius: 50%;"></div>
+                <span style="margin-left: 10px;">${kingdom}</span>
+            `;
                     colorLegendContainer.appendChild(legendItem);
                 });
 
@@ -512,7 +545,7 @@ usort($kingdoms, function ($a, $b) use ($desired_order) {
 
                 filteredData.sort((a, b) => a.reignstart - b.reignstart);
 
-                renderYearLabels(minYearSelected, maxYear); // Render ปีใหม่ทุกครั้งที่มีการซูม
+                renderYearLabels(minYearSelected, maxYear);
 
                 const timelineItems = document.createElement('div');
                 timelineItems.classList.add('timeline-items');
@@ -546,10 +579,11 @@ usort($kingdoms, function ($a, $b) use ($desired_order) {
                         itemDiv.style.width = `${getWidth(item.reignstart, item.reignend)}px`;
                         itemDiv.style.backgroundColor = getColorForKingdom(item.kingdomname);
 
+                        // อัปเดตปีใน item ตามค่าที่เลือก (พ.ศ. หรือ ค.ศ.)
                         itemDiv.innerHTML = `
-                            <h3>${item.name}</h3>
-                            <p>พ.ศ. ${item.reignstart} - พ.ศ. ${item.reignend}</p>
-                        `;
+                    <h3>${item.name}</h3>
+                    <p>${formatYear(item.reignstart)} - ${formatYear(item.reignend)}</p>
+                `;
 
                         itemDiv.addEventListener('mouseenter', () => {
                             itemDiv.style.zIndex = '999';
@@ -598,28 +632,31 @@ usort($kingdoms, function ($a, $b) use ($desired_order) {
             }
 
             function formatYear(year) {
+                if (year === null) {
+                    return 'ไม่ปรากฎ'; // ถ้าปีเป็น null ให้แสดง null
+                }
+
                 const format = yearFormatSelect.value;
                 if (format === 'buddhist') {
                     return `พ.ศ. ${year}`;
                 } else {
-                    return `ค.ศ. ${year - 543}`; // แปลงปี พ.ศ. เป็น ค.ศ.
+                    return `ค.ศ. ${year - 543}`; // แปลง พ.ศ. เป็น ค.ศ.
                 }
             }
 
+
             yearFormatSelect.addEventListener('change', () => {
-                renderTimeline(); // เรียก renderTimeline ใหม่เพื่ออัปเดตปี
-                renderYearLabels(minYearSelected, maxYear); // อัปเดต year labels
+                renderTimeline();
+                renderYearLabels(minYearSelected, maxYear);
             });
 
-
-
             function getPositionLeft(year, minYear) {
-                const yearWidth = 150 * zoomLevel; // ปรับตามระดับการซูม
+                const yearWidth = 150 * zoomLevel;
                 return (year - minYear) * yearWidth;
             }
 
             function getWidth(startYear, endYear) {
-                const yearWidth = 150 * zoomLevel; // ปรับความกว้างตามระดับการซูม
+                const yearWidth = 150 * zoomLevel;
                 return (endYear - startYear + 1) * yearWidth;
             }
 
@@ -650,6 +687,7 @@ usort($kingdoms, function ($a, $b) use ($desired_order) {
             renderTimeline();
         });
     </script>
+
 </body>
 
 </html>

@@ -1,22 +1,22 @@
-document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener("DOMContentLoaded", function () {
     const tableSelect = document.getElementById('tableSelect');
     const treeContainer = document.getElementById('tree');
     const errorContainer = document.getElementById('error');
     const loadingIndicator = document.getElementById('loading');
     const searchInput = document.getElementById('searchInput');
-    
-    OrgChart.templates.ana.defs = 
-    `<g transform="matrix(0.05,0,0,0.05,-12,-9)" id="heart">
+
+    OrgChart.templates.ana.defs =
+        `<g transform="matrix(0.05,0,0,0.05,-12,-9)" id="heart">
         <path fill="#F57C00" d="M438.482,58.61c-24.7-26.549-59.311-41.655-95.573-41.711c-36.291,0.042-70.938,15.14-95.676,41.694l-8.431,8.909  
         l-8.431-8.909C181.284,5.762,98.663,2.728,45.832,51.815c-2.341,2.176-4.602,4.436-6.778,6.778 
         c-52.072,56.166-52.072,142.968,0,199.134l187.358,197.581c6.482,6.843,17.284,7.136,24.127,0.654 
         c0.224-0.212,0.442-0.43,0.654-0.654l187.29-197.581C490.551,201.567,490.551,114.77,438.482,58.61z"/>
     <g>`;
 
-    OrgChart.templates.ana.field_0 = 
-    '<text data-width="230" data-text-overflow="ellipsis" style="font-size: 20px;" fill="#000000" x="125" y="100" text-anchor="middle">{val}</text>';
-    OrgChart.templates.ana.field_1 = 
-    '<text data-width="130" data-text-overflow="ellipsis" style="font-size: 16px;" fill="#000000" x="230" y="30" text-anchor="end">{val}</text>';
+    OrgChart.templates.ana.field_0 =
+        '<text data-width="230" data-text-overflow="ellipsis" style="font-size: 20px;" fill="#000000" x="125" y="100" text-anchor="middle">{val}</text>';
+    OrgChart.templates.ana.field_1 =
+        '<text data-width="130" data-text-overflow="ellipsis" style="font-size: 16px;" fill="#000000" x="230" y="30" text-anchor="end">{val}</text>';
 
     OrgChart.templates.filtered = Object.assign({}, OrgChart.templates.ana);
     OrgChart.templates.filtered.size = [80, 150];
@@ -57,7 +57,7 @@ document.addEventListener("DOMContentLoaded", function() {
                         return gender;
                     }
                 };
-                
+
                 const nodes = familyData.map(member => ({
                     id: member.id,
                     pid: member.parent_id,
@@ -77,7 +77,7 @@ document.addEventListener("DOMContentLoaded", function() {
                     ppid: member.ppid,
                     เพศ: translateGender(member.gender)  // ใช้ฟังก์ชัน translateGender() ที่นี่
                 }));
-                
+
                 console.log('Nodes:', nodes);
 
                 if (chart) {
@@ -85,7 +85,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 } else {
                     chart = new OrgChart(treeContainer, {
                         nodes: nodes,
-                        layout: OrgChart.tree,    
+                        layout: OrgChart.tree,
                         mouseScrool: OrgChart.none,
                         align: OrgChart.ORIENTATION,
                         keyNavigation: false,
@@ -114,36 +114,36 @@ document.addEventListener("DOMContentLoaded", function() {
                                 template: 'filtered'
                             }
                         },
-                        
+
                         template: "ana",
                         enableSearch: true,
                         searchFields: ["ชื่อ"],
-                        
+
                     });
 
-                    chart.filterUI.on('add-filter', function(sender, args){
+                    chart.filterUI.on('add-filter', function (sender, args) {
                         var names = Object.keys(sender.filterBy);
                         var index = names.indexOf(args.name);
                         if (index == names.length - 1) {
                             args.html += `<div data-btn-reset style="color: #039BE5;">reset</div>`;
-                        }  
+                        }
                     });
-                    chart.filterUI.on('add-item', function(sender, args){
+                    chart.filterUI.on('add-item', function (sender, args) {
                         var count = 0;
                         var totalCount = 0;
-                        for (var i = 0; i < sender.instance.config.nodes.length; i++){
-                            var data = sender.instance.config.nodes[i];      
-                            if (data[args.name] != undefined){
+                        for (var i = 0; i < sender.instance.config.nodes.length; i++) {
+                            var data = sender.instance.config.nodes[i];
+                            if (data[args.name] != undefined) {
                                 totalCount++;
-                    
-                                if (data[args.name] == args.value){            
-                                    count++;    
-                                }            
+
+                                if (data[args.name] == args.value) {
+                                    count++;
+                                }
                             }
                         }
-                    
+
                         var dataAllAttr = '';
-                        if (args.text == '[All]'){
+                        if (args.text == '[All]') {
                             count = totalCount;
                             dataAllAttr = 'data-all';
                         }
@@ -152,37 +152,37 @@ document.addEventListener("DOMContentLoaded", function() {
                                         <label for="${args.value}">${args.text} (${count})</label>
                                     </div>`;
                     });
-                    chart.filterUI.on('update', function(sender, args){
+                    chart.filterUI.on('update', function (sender, args) {
                         var btnResetElement = sender.element.querySelector('[data-btn-reset]');
-                        btnResetElement.addEventListener('click', function(e){
+                        btnResetElement.addEventListener('click', function (e) {
                             sender.filterBy = null;
                             sender.update();
                             sender.instance.draw();
                         });
                     });
-                    
-                    chart.filterUI.on('show-items', function(sender, args){
+
+                    chart.filterUI.on('show-items', function (sender, args) {
                         var filterItemElements = sender.element.querySelectorAll('.filter-item');
-                        for(var i = 0; i < filterItemElements.length; i++){        
-                            filterItemElements[i].addEventListener('mouseenter', function(e){
-                                var val = e.target.querySelector('input').id;           
-                                if (val != args.name){//[All]
-                                    for(var j = 0; j < sender.instance.config.nodes.length; j++){
+                        for (var i = 0; i < filterItemElements.length; i++) {
+                            filterItemElements[i].addEventListener('mouseenter', function (e) {
+                                var val = e.target.querySelector('input').id;
+                                if (val != args.name) {//[All]
+                                    for (var j = 0; j < sender.instance.config.nodes.length; j++) {
                                         var data = sender.instance.config.nodes[j];
-                                        if (data[args.name] == val){
+                                        if (data[args.name] == val) {
                                             var nodeElement = sender.instance.getNodeElement(data.id);
                                             nodeElement.classList.add('filter-item-hovered');
                                         }
                                     }
                                 }
                             });
-                            
-                            filterItemElements[i].addEventListener('mouseleave', function(e){
-                                var val = e.target.querySelector('input').id;           
-                                if (val != args.name){//[All]
-                                    for(var j = 0; j < sender.instance.config.nodes.length; j++){
+
+                            filterItemElements[i].addEventListener('mouseleave', function (e) {
+                                var val = e.target.querySelector('input').id;
+                                if (val != args.name) {//[All]
+                                    for (var j = 0; j < sender.instance.config.nodes.length; j++) {
                                         var data = sender.instance.config.nodes[j];
-                                        if (data[args.name] == val){
+                                        if (data[args.name] == val) {
                                             var nodeElement = sender.instance.getNodeElement(data.id);
                                             nodeElement.classList.remove('filter-item-hovered');
                                         }
@@ -191,28 +191,28 @@ document.addEventListener("DOMContentLoaded", function() {
                             });
                         }
                     });
-                    
-                    chart.onInit(function(args){
+
+                    chart.onInit(function (args) {
                         this.filterUI.show('title');
                     });
 
-                    chart.on('render-link', function(sender, args) {
+                    chart.on('render-link', function (sender, args) {
                         let heartCreated = false;
-                    
+
                         // // เงื่อนไขแรก: ถ้า ppid ถูกกำหนด และยังไม่ได้สร้างหัวใจ
                         // if (args.cnode.ppid !== undefined && !heartCreated) {
                         //      args.html += '<use xlink:href="#heart" x="'+ args.p.xa +'" y="'+ args.p.ya +'" />';
                         //      heartCreated = true; // ตั้งค่าว่าหัวใจถูกสร้างแล้ว
                         //  }
-                    
+
                         // เงื่อนไขที่สอง: ถ้ามี tag {partner} และยังไม่ได้สร้างหัวใจ
                         if (!heartCreated && args.cnode.tags && args.cnode.tags.includes('partner')) {
-                            args.html += '<use xlink:href="#heart" x="'+ args.p.xa +'" y="'+ args.p.ya +'" />';
+                            args.html += '<use xlink:href="#heart" x="' + args.p.xa + '" y="' + args.p.ya + '" />';
                             heartCreated = true; // ตั้งค่าว่าหัวใจถูกสร้างแล้ว
                         }
-                    });                    
-                    
-                    
+                    });
+
+
                 }
 
                 errorContainer.style.display = 'none';
@@ -229,7 +229,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
     loadFamilyData(tableSelect.value);
 
-    tableSelect.addEventListener('change', function() {
+    tableSelect.addEventListener('change', function () {
         loadFamilyData(this.value);
     });
 });
