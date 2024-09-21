@@ -1,5 +1,5 @@
 <?php
-// ข้อมูลการเชื่อมต่อฐานข้อมูลและการดึงข้อมูลจากฐานข้อมูลยังคงเหมือนเดิม
+// Database connection and data retrieval
 $host = "localhost";
 $port = "5432";
 $dbname = "postgres";
@@ -12,104 +12,39 @@ if (!$conn) {
     die("Connection failed: " . pg_last_error());
 }
 
-$query = "
-    SELECT name, reignstart, reignend, kingdomname, monarch FROM public.funan WHERE kingdomname IS NOT NULL
-    UNION ALL
-    SELECT name, reignstart, reignend, kingdomname, monarch FROM public.tampornling WHERE kingdomname IS NOT NULL
-    UNION ALL
-    SELECT name, reignstart, reignend, kingdomname, monarch FROM public.janela WHERE kingdomname IS NOT NULL
-    UNION ALL
-    SELECT name, reignstart, reignend, kingdomname, monarch FROM public.hripunchai WHERE kingdomname IS NOT NULL
-    UNION ALL
-    SELECT name, reignstart, reignend, kingdomname, monarch FROM public.srivichai WHERE kingdomname IS NOT NULL
-    UNION ALL
-    SELECT name, reignstart, reignend, kingdomname, monarch FROM public.panakorn WHERE kingdomname IS NOT NULL
-    UNION ALL
-    SELECT name, reignstart, reignend, kingdomname, monarch FROM public.lavo WHERE kingdomname IS NOT NULL
-    UNION ALL
-    SELECT name, reignstart, reignend, kingdomname, monarch FROM public.sukothai WHERE kingdomname IS NOT NULL
-    UNION ALL
-    SELECT name, reignstart, reignend, kingdomname, monarch FROM public.lanna WHERE kingdomname IS NOT NULL
-    UNION ALL
-    SELECT name, reignstart, reignend, kingdomname, monarch FROM public.ayuttaya WHERE kingdomname IS NOT NULL
-    UNION ALL
-    SELECT name, reignstart, reignend, kingdomname, monarch FROM public.lanchang WHERE kingdomname IS NOT NULL
-    UNION ALL
-    SELECT name, reignstart, reignend, kingdomname, monarch FROM public.kamenravak WHERE kingdomname IS NOT NULL
-    UNION ALL
-    SELECT name, reignstart, reignend, kingdomname, monarch FROM public.ratanakosin WHERE kingdomname IS NOT NULL
-    ORDER BY reignstart ASC, reignend ASC;
-";
-
-$result = pg_query($conn, $query);
-
-if (!$result) {
-    die("Error in SQL query: " . pg_last_error());
-}
-
-$timeline_data = array();
-while ($row = pg_fetch_assoc($result)) {
-    $timeline_data[] = $row;
-}
-
-$kingdom_query = "SELECT DISTINCT kingdomname FROM (
-    SELECT kingdomname FROM public.funan
-    UNION ALL
-    SELECT kingdomname FROM public.tampornling
-    UNION ALL
-    SELECT kingdomname FROM public.janela
-    UNION ALL
-    SELECT kingdomname FROM public.hripunchai
-    UNION ALL
-    SELECT kingdomname FROM public.srivichai
-    UNION ALL
-    SELECT kingdomname FROM public.panakorn
-    UNION ALL
-    SELECT kingdomname FROM public.lavo
-    UNION ALL
-    SELECT kingdomname FROM public.sukothai
-    UNION ALL
-    SELECT kingdomname FROM public.lanna
-    UNION ALL
-    SELECT kingdomname FROM public.ayuttaya
-    UNION ALL
-    SELECT kingdomname FROM public.lanchang
-    UNION ALL
-    SELECT kingdomname FROM public.kamenravak
-    UNION ALL
-    SELECT kingdomname FROM public.ratanakosin
-) as kingdoms WHERE kingdomname IS NOT NULL ORDER BY kingdomname ASC;";
-
-$kingdom_result = pg_query($conn, $kingdom_query);
-
-$kingdoms = [];
-while ($row = pg_fetch_assoc($kingdom_result)) {
-    $kingdoms[] = $row['kingdomname'];
-}
-
-pg_close($conn);
-
-$desired_order = [
-    'ฟูนาน',
-    'อาณาจักรตามพรลิงค์',
-    'เจนละ',
-    'หริภุญชัย',
-    'อาณาจักรศรีวิชัย',
-    'อาณาจักรพระนคร',
-    'อาณาจักรละโว้',
-    'อาณาจักรสุโขทัย',
-    'อาณาจักรล้านนา',
-    'อาณาจักรอยุธยา',
-    'อาณาจักรล้านช้าง',
-    'สมัยละแวก',
-    'กรุงรัตนโกสินทร์'
+$tables = [
+    'funan',
+    'tampornling',
+    'janela',
+    'hripunchai',
+    'srivichai',
+    'panakorn',
+    'lavo',
+    'sukothai',
+    'lanna',
+    'ayuttaya',
+    'lanchang',
+    'kamenravak',
+    'ratanakosin'
 ];
 
-usort($kingdoms, function ($a, $b) use ($desired_order) {
-    $pos_a = array_search($a, $desired_order);
-    $pos_b = array_search($b, $desired_order);
-    return $pos_a - $pos_b;
-});
+$timeline_data = [];
+foreach ($tables as $table) {
+    $query = "
+        SELECT id, name, reignstart, reignend, '$table' as kingdomname, monarch 
+        FROM public.$table 
+        WHERE kingdomname IS NOT NULL
+        ORDER BY reignstart ASC, reignend ASC;
+    ";
+
+    $result = pg_query($conn, $query);
+    while ($row = pg_fetch_assoc($result)) {
+        $timeline_data[] = $row;
+    }
+}
+
+// Close the database connection
+pg_close($conn);
 ?>
 
 <!DOCTYPE html>
@@ -175,7 +110,6 @@ usort($kingdoms, function ($a, $b) use ($desired_order) {
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
             border-radius: 8px;
             overflow-x: auto;
-            /* Enable horizontal scrolling */
         }
 
         .select-all-container {
@@ -241,7 +175,6 @@ usort($kingdoms, function ($a, $b) use ($desired_order) {
             border-radius: 10px;
             box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
             overflow-x: auto;
-            /* Enable horizontal scrolling */
         }
 
         .timeline-item {
@@ -252,11 +185,8 @@ usort($kingdoms, function ($a, $b) use ($desired_order) {
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
             transition: transform 0.2s ease-in-out, z-index 0.2s ease;
             white-space: nowrap;
-            /* Prevent text from wrapping */
             overflow: hidden;
-            /* Hide overflow text */
             text-overflow: ellipsis;
-            /* Show ellipsis for overflow text */
             padding: 10px;
             font-size: 12px;
             min-width: 80px;
@@ -268,25 +198,6 @@ usort($kingdoms, function ($a, $b) use ($desired_order) {
             transform: translateY(-5px);
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
             z-index: 10;
-            /* Bring the item to the top */
-        }
-
-
-        .timeline-items .timeline-item {
-            border: 1px solid #ced4da;
-            border-radius: 8px;
-            background-color: #ffffff;
-            text-align: center;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            transition: transform 0.2s ease-in-out;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            padding: 10px;
-            font-size: 12px;
-            min-width: 80px;
-            position: absolute;
-            z-index: 1;
         }
 
         .timeline-item h3 {
@@ -294,11 +205,8 @@ usort($kingdoms, function ($a, $b) use ($desired_order) {
             font-size: 14px;
             color: #333;
             overflow: hidden;
-            /* Hide overflow */
             text-overflow: ellipsis;
-            /* Show ellipsis */
             white-space: nowrap;
-            /* Prevent text from wrapping */
         }
 
         .timeline-item p {
@@ -306,11 +214,8 @@ usort($kingdoms, function ($a, $b) use ($desired_order) {
             font-size: 12px;
             color: #333;
             overflow: hidden;
-            /* Hide overflow */
             text-overflow: ellipsis;
-            /* Show ellipsis */
             white-space: nowrap;
-            /* Prevent text from wrapping */
         }
 
         .timeline-item p:last-child {
@@ -329,41 +234,27 @@ usort($kingdoms, function ($a, $b) use ($desired_order) {
             bottom: 20px;
             left: 20px;
             z-index: 1000;
-            /* ทำให้ปุ่มอยู่ด้านบนของเนื้อหาอื่น */
             background-color: #007bff;
-            /* สีพื้นฐาน */
             color: #fff;
-            /* สีตัวอักษร */
             border: none;
             padding: 12px 24px;
-            /* ขนาดของปุ่ม */
             font-size: 16px;
-            /* ขนาดฟอนต์ */
             font-weight: bold;
             border-radius: 5px;
-            /* มุมโค้งมน */
             cursor: pointer;
-            /* เปลี่ยนเคอร์เซอร์เป็นรูปมือเมื่อชี้ */
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            /* เงาปุ่ม */
             transition: background-color 0.3s ease, transform 0.2s ease;
-            /* เพิ่ม transition เพื่อให้ปุ่มตอบสนอง */
         }
 
         #toggle-zoom:hover {
             background-color: #0056b3;
-            /* สีเมื่อชี้เมาส์ */
             transform: translateY(-3px);
-            /* เลื่อนปุ่มขึ้นเล็กน้อยเมื่อชี้เมาส์ */
             box-shadow: 0 6px 8px rgba(0, 0, 0, 0.2);
-            /* เงาที่เข้มขึ้น */
         }
 
         #toggle-zoom:active {
             transform: translateY(0);
-            /* ปรับปุ่มให้ยุบลงเล็กน้อยเมื่อกด */
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            /* ลดเงาลงเมื่อกดปุ่ม */
         }
 
         .button-container {
@@ -500,9 +391,9 @@ usort($kingdoms, function ($a, $b) use ($desired_order) {
                     legendItem.style.fontWeight = 'bold';
                     legendItem.style.textAlign = 'center';
                     legendItem.innerHTML = `
-                <div style="background-color: ${getColorForKingdom(kingdom)}; width: 20px; height: 20px; border-radius: 50%;"></div>
-                <span style="margin-left: 10px;">${kingdom}</span>
-            `;
+                        <div style="background-color: ${getColorForKingdom(kingdom)}; width: 20px; height: 20px; border-radius: 50%;"></div>
+                        <span style="margin-left: 10px;">${kingdom}</span>
+                    `;
                     colorLegendContainer.appendChild(legendItem);
                 });
 
@@ -579,11 +470,16 @@ usort($kingdoms, function ($a, $b) use ($desired_order) {
                         itemDiv.style.width = `${getWidth(item.reignstart, item.reignend)}px`;
                         itemDiv.style.backgroundColor = getColorForKingdom(item.kingdomname);
 
-                        // อัปเดตปีใน item ตามค่าที่เลือก (พ.ศ. หรือ ค.ศ.)
                         itemDiv.innerHTML = `
-                    <h3>${item.name}</h3>
-                    <p>${formatYear(item.reignstart)} - ${formatYear(item.reignend)}</p>
-                `;
+        <h3>${item.name}</h3>
+        <p>${formatYear(item.reignstart)} - ${formatYear(item.reignend)}</p>
+    `;
+
+                        // Add click event to redirect to family_tree.php with search parameter
+                        itemDiv.addEventListener('click', () => {
+                            const searchName = encodeURIComponent(item.name);
+                            window.location.href = `family_tree.php?id=${item.id}&table=${item.kingdomname}&search=${searchName}`;
+                        });
 
                         itemDiv.addEventListener('mouseenter', () => {
                             itemDiv.style.zIndex = '999';
@@ -596,11 +492,13 @@ usort($kingdoms, function ($a, $b) use ($desired_order) {
                         rowDiv.appendChild(itemDiv);
                     });
 
+
                     timelineItems.appendChild(rowDiv);
                 });
 
                 timelineWrapper.appendChild(timelineItems);
             }
+
 
             function renderYearLabels(minYear, maxYear) {
                 const existingYearContainer = document.querySelector('.year-labels');
@@ -644,7 +542,6 @@ usort($kingdoms, function ($a, $b) use ($desired_order) {
                 }
             }
 
-
             yearFormatSelect.addEventListener('change', () => {
                 renderTimeline();
                 renderYearLabels(minYearSelected, maxYear);
@@ -687,7 +584,6 @@ usort($kingdoms, function ($a, $b) use ($desired_order) {
             renderTimeline();
         });
     </script>
-
 </body>
 
 </html>
