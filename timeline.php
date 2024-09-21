@@ -348,6 +348,23 @@ pg_close($conn);
             const selectAllCheckbox = document.getElementById('select-all');
             const yearFormatSelect = document.getElementById('year-format');
 
+            // Map kingdom names to Thai
+            const kingdomNames = {
+                'funan': 'ฟูนาน',
+                'tampornling': 'อาณาจักรตามพรลิงค์',
+                'janela': 'เจนละ',
+                'hripunchai': 'หริภุญชัย',
+                'srivichai': 'อาณาจักรศรีวิชัย',
+                'panakorn': 'อาณาจักรพระนคร',
+                'lavo': 'อาณาจักรละโว้',
+                'sukothai': 'อาณาจักรสุโขทัย',
+                'lanna': 'อาณาจักรล้านนา',
+                'ayuttaya': 'อาณาจักรอยุธยา',
+                'lanchang': 'อาณาจักรล้านช้าง',
+                'kamenravak': 'สมัยละแวก',
+                'ratanakosin': 'กรุงรัตนโกสินทร์'
+            };
+
             let zoomLevel = 1;
             const zoomFactor = 2;
             let isZoomedOut = false;
@@ -380,7 +397,7 @@ pg_close($conn);
 
                     label.setAttribute('for', checkbox.id);
                     label.appendChild(checkbox);
-                    label.appendChild(document.createTextNode(kingdom));
+                    label.appendChild(document.createTextNode(kingdomNames[kingdom] || kingdom)); // Use Thai name if available
                     filterContainer.appendChild(label);
 
                     const legendItem = document.createElement('div');
@@ -392,7 +409,7 @@ pg_close($conn);
                     legendItem.style.textAlign = 'center';
                     legendItem.innerHTML = `
                         <div style="background-color: ${getColorForKingdom(kingdom)}; width: 20px; height: 20px; border-radius: 50%;"></div>
-                        <span style="margin-left: 10px;">${kingdom}</span>
+                        <span style="margin-left: 10px;">${kingdomNames[kingdom] || kingdom}</span>
                     `;
                     colorLegendContainer.appendChild(legendItem);
                 });
@@ -451,7 +468,7 @@ pg_close($conn);
 
                     const kingdomLabel = document.createElement('div');
                     kingdomLabel.classList.add('kingdom-label');
-                    kingdomLabel.textContent = kingdom;
+                    kingdomLabel.textContent = kingdomNames[kingdom] || kingdom; // Use Thai name
                     kingdomLabel.style.position = 'absolute';
                     kingdomLabel.style.left = '0px';
                     kingdomLabel.style.top = '50%';
@@ -471,9 +488,9 @@ pg_close($conn);
                         itemDiv.style.backgroundColor = getColorForKingdom(item.kingdomname);
 
                         itemDiv.innerHTML = `
-        <h3>${item.name}</h3>
-        <p>${formatYear(item.reignstart)} - ${formatYear(item.reignend)}</p>
-    `;
+                            <h3>${item.name}</h3>
+                            <p>${formatYear(item.reignstart)} - ${formatYear(item.reignend)}</p>
+                        `;
 
                         // Add click event to redirect to family_tree.php with search parameter
                         itemDiv.addEventListener('click', () => {
@@ -492,13 +509,11 @@ pg_close($conn);
                         rowDiv.appendChild(itemDiv);
                     });
 
-
                     timelineItems.appendChild(rowDiv);
                 });
 
                 timelineWrapper.appendChild(timelineItems);
             }
-
 
             function renderYearLabels(minYear, maxYear) {
                 const existingYearContainer = document.querySelector('.year-labels');

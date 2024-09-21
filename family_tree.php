@@ -145,6 +145,7 @@
             const loadingIndicator = document.getElementById('loading');
             let allNodes = [];
             let chart;
+            let isTableChanged = false;  // ตัวแปรเพื่อตรวจสอบว่ามีการเปลี่ยนอาณาจักร
 
             OrgChart.templates.ana.defs =
                 `<g transform="matrix(0.05,0,0,0.05,-12,-9)" id="heart">
@@ -174,6 +175,7 @@
             };
 
             const loadFamilyData = (table) => {
+                searchInput.value = ''; // ล้างช่องค้นหาเมื่อเปลี่ยนอาณาจักร
                 loadingIndicator.style.display = 'block';
                 return fetchFamilyData(table)
                     .then(familyData => {
@@ -299,7 +301,10 @@
             });
 
             // Load family data and highlight the node
-            loadFamilyData(tableSelect.value).then(highlightNode);
+            loadFamilyData(tableSelect.value).then(() => {
+                isTableChanged = false; // รีเซ็ตตัวแปรหลังจากโหลดข้อมูลใหม่
+                highlightNode();
+            });
 
             // Highlight the node based on URL parameters
             function highlightNode() {
@@ -307,9 +312,11 @@
                 const selectedId = urlParams.get('id');
                 const searchName = urlParams.get('search');
 
-                if (searchName) {
+                if (searchName && !isTableChanged) { // ตรวจสอบว่ามีการเปลี่ยนอาณาจักรหรือไม่
                     searchInput.value = decodeURIComponent(searchName);
                     handleSearch();  // Perform search automatically
+                } else {
+                    searchInput.value = ''; // ล้างช่องค้นหาถ้าไม่มี searchName ใน URL
                 }
 
                 if (selectedId && chart) {
@@ -328,11 +335,18 @@
             // If table is specified in the URL, load that table's data
             if (selectedTable) {
                 tableSelect.value = selectedTable;
-                loadFamilyData(selectedTable).then(highlightNode);
+                loadFamilyData(selectedTable).then(() => {
+                    isTableChanged = false; // รีเซ็ตตัวแปรหลังจากโหลดข้อมูลใหม่
+                    highlightNode();
+                });
             }
 
             tableSelect.addEventListener('change', function () {
-                loadFamilyData(this.value).then(highlightNode);
+                isTableChanged = true;  // ตั้งค่าว่ามีการเปลี่ยนอาณาจักร
+                loadFamilyData(this.value).then(() => {
+                    isTableChanged = false; // รีเซ็ตตัวแปรหลังจากโหลดข้อมูลใหม่
+                    highlightNode();
+                });
             });
         });
     </script>
