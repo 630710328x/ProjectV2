@@ -500,7 +500,6 @@ try {
                     <p>พระองค์ถัดไป : ${location.after ? location.after : 'ไม่ปรากฏ'}</p>
                     <p>ปกครอง : พ.ศ. ${location.reignstart ? location.reignstart : 'ไม่ปรากฏ'} - พ.ศ. ${location.reignend ? location.reignend : 'ไม่ปรากฏ'}</p>
                     <p>ปกครอง : ค.ศ. ${reignStartCE} - ค.ศ. ${reignEndCE}</p>
-                    <button onclick="goToFamilyTree('${encodeURIComponent(location.name)}')">ไปที่ Family Tree</button>
                 </div>
             `
                     });
@@ -508,12 +507,7 @@ try {
                     console.warn('Invalid location data:', location);
                 }
             });
-
-            // ฟังก์ชันสำหรับเปลี่ยนเส้นทางไปยัง family_tree.php พร้อมส่งชื่อ
-            function goToFamilyTree(name) {
-                window.location.href = `family_tree.php?search=${name}`;
-            }
-
+            
 
             // แสดง Marker บนแผนที่
             Object.keys(markersMap).forEach(function (key) {
