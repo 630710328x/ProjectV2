@@ -366,7 +366,6 @@ pg_close($conn);
             };
 
             let zoomLevel = 1;
-            const zoomFactor = 2;
             let isZoomedOut = false;
             const toggleZoomButton = document.getElementById('toggle-zoom');
             let minYearSelected, maxYear;
@@ -484,7 +483,7 @@ pg_close($conn);
                         const itemDiv = document.createElement('div');
                         itemDiv.classList.add('timeline-item');
                         itemDiv.style.left = `${getPositionLeft(item.reignstart, minYearSelected)}px`;
-                        itemDiv.style.width = `${getWidth(item.reignstart, item.reignend)}px`;
+                        itemDiv.style.width = `${getWidth(item.reignstart, item.reignend, item.name)}px`;
                         itemDiv.style.backgroundColor = getColorForKingdom(item.kingdomname);
 
                         itemDiv.innerHTML = `
@@ -567,9 +566,12 @@ pg_close($conn);
                 return (year - minYear) * yearWidth;
             }
 
-            function getWidth(startYear, endYear) {
+            function getWidth(startYear, endYear, name) {
                 const yearWidth = 150 * zoomLevel;
-                return (endYear - startYear + 1) * yearWidth;
+                const baseWidth = yearWidth * (endYear - startYear + 1); // คำนวณความกว้างจากปี
+                const text = `${name} (${formatYear(startYear)} - ${formatYear(endYear)})`;
+                const textWidth = Math.max(text.length * 8, 80); // คำนวณความกว้างตามความยาวของข้อความ (8px ต่ออักขระ)
+                return Math.max(baseWidth, textWidth); // ให้คืนค่าความกว้างที่มากกว่าระหว่างสองค่า
             }
 
             function getColorForKingdom(kingdom) {

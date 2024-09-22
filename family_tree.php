@@ -145,7 +145,7 @@
             const loadingIndicator = document.getElementById('loading');
             let allNodes = [];
             let chart;
-            let isTableChanged = false;  // ตัวแปรเพื่อตรวจสอบว่ามีการเปลี่ยนอาณาจักร
+            let isTableChanged = false;
 
             OrgChart.templates.ana.defs =
                 `<g transform="matrix(0.05,0,0,0.05,-12,-9)" id="heart">
@@ -193,6 +193,8 @@
                             สวรรคต: member.death !== null ? "พ.ศ. " + member.death : "ไม่ปรากฏ",
                             img: member.img,
                             tags: member.tags,
+                            เพศ: member.gender === 'Female' ? 'หญิง' : 'ชาย',
+                            ppid: member.ppid
                         }));
 
                         if (chart) {
@@ -247,7 +249,6 @@
                     });
             };
 
-            // Debounce function to limit how often the search function runs
             const debounce = (func, wait) => {
                 let timeout;
                 return function (...args) {
@@ -260,7 +261,6 @@
                 };
             };
 
-            // Recursively find and include all descendants of a node
             const findDescendants = (nodeId, nodes) => {
                 let descendants = [];
                 nodes.forEach(node => {
@@ -272,7 +272,6 @@
                 return descendants;
             };
 
-            // Handle search input
             const handleSearch = debounce(function () {
                 const searchTerm = searchInput.value.toLowerCase();
                 if (chart) {
@@ -293,30 +292,27 @@
 
             searchInput.addEventListener('input', handleSearch);
 
-            // Handle reset search input
             resetButton.addEventListener('click', function () {
                 searchInput.value = '';
-                handleSearch();  // Refresh the chart with all nodes
+                handleSearch();
                 alert('ค้นหาได้ถูกรีเซ็ตแล้ว');
             });
 
-            // Load family data and highlight the node
             loadFamilyData(tableSelect.value).then(() => {
-                isTableChanged = false; // รีเซ็ตตัวแปรหลังจากโหลดข้อมูลใหม่
+                isTableChanged = false;
                 highlightNode();
             });
 
-            // Highlight the node based on URL parameters
             function highlightNode() {
                 const urlParams = new URLSearchParams(window.location.search);
                 const selectedId = urlParams.get('id');
                 const searchName = urlParams.get('search');
 
-                if (searchName && !isTableChanged) { // ตรวจสอบว่ามีการเปลี่ยนอาณาจักรหรือไม่
+                if (searchName && !isTableChanged) {
                     searchInput.value = decodeURIComponent(searchName);
-                    handleSearch();  // Perform search automatically
+                    handleSearch();
                 } else {
-                    searchInput.value = ''; // ล้างช่องค้นหาถ้าไม่มี searchName ใน URL
+                    searchInput.value = '';
                 }
 
                 if (selectedId && chart) {
@@ -328,23 +324,21 @@
                 }
             }
 
-            // Handle URL parameters for table selection and highlighting nodes
             const urlParams = new URLSearchParams(window.location.search);
             const selectedTable = urlParams.get('table');
 
-            // If table is specified in the URL, load that table's data
             if (selectedTable) {
                 tableSelect.value = selectedTable;
                 loadFamilyData(selectedTable).then(() => {
-                    isTableChanged = false; // รีเซ็ตตัวแปรหลังจากโหลดข้อมูลใหม่
+                    isTableChanged = false;
                     highlightNode();
                 });
             }
 
             tableSelect.addEventListener('change', function () {
-                isTableChanged = true;  // ตั้งค่าว่ามีการเปลี่ยนอาณาจักร
+                isTableChanged = true;
                 loadFamilyData(this.value).then(() => {
-                    isTableChanged = false; // รีเซ็ตตัวแปรหลังจากโหลดข้อมูลใหม่
+                    isTableChanged = false;
                     highlightNode();
                 });
             });

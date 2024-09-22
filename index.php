@@ -89,8 +89,15 @@ try {
             $stmt->bindParam(':relationship', $inputRelationship, PDO::PARAM_STR);
             $stmt->bindParam(':relationshipWithTimes', $relationshipWithTimes, PDO::PARAM_STR);
         } elseif ($inputYear !== null) {
-            $stmt = $pdo->prepare("SELECT latitude, longitude, name, kingdomname, url, imgplace, reignstart, reignend, after, before, relationship FROM $table WHERE :year BETWEEN reignstart AND reignend");
+            $stmt = $pdo->prepare("
+    SELECT latitude, longitude, name, kingdomname, url, imgplace, reignstart, reignend, after, before, relationship 
+    FROM $table 
+    WHERE (:year BETWEEN reignstart AND reignend)
+    OR (:year = reignstart)
+    OR (:year = reignend)
+");
             $stmt->bindParam(':year', $inputYear, PDO::PARAM_INT);
+
         }
         $stmt->execute();
         $locations = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -108,7 +115,6 @@ try {
     die("Database connection failed: " . $e->getMessage());
 }
 ?>
-
 
 <!DOCTYPE html>
 <html lang="en">
@@ -182,15 +188,10 @@ try {
             border-radius: 5px;
             box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
             z-index: 1000;
-            /* Ensure the form is on top of the map */
             max-height: 80vh;
-            /* จำกัดความสูงของฟอร์มตามขนาดหน้าจอ */
             overflow-y: auto;
-            /* เพิ่มการเลื่อนแนวตั้ง */
             width: 300px;
-            /* กำหนดความกว้างให้เหมาะสม */
         }
-
 
         fieldset {
             border: 1px solid #ccc;
@@ -246,7 +247,6 @@ try {
         }
     </style>
 
-
 </head>
 
 <body>
@@ -263,18 +263,15 @@ try {
 
     <?php
     $message = '';
-    // Database connection and query logic
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (isset($_POST['reset'])) {
-            // กระทำการรีเซ็ต
             $message = 'รีเซ็ตเสร็จเรียบร้อยแล้ว';
-            $selectedKingdoms = array(); // Clear selected kingdoms
+            $selectedKingdoms = array();
             $inputYear = null;
             $inputName = null;
             $inputRelationship = null;
-            $eraType = 'CE'; // Reset to default
+            $eraType = 'CE';
         } elseif (isset($_POST['searchType'])) {
-            // กระทำการค้นหา
             if (empty($allLocations)) {
                 $message = 'ไม่มีข้อมูลที่ต้องการค้นหา';
             } else {
@@ -284,7 +281,6 @@ try {
     }
     ?>
 
-
     <div id="map">
         <div class="form-container">
             <form method="POST" action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>">
@@ -292,7 +288,6 @@ try {
                     <legend>Select Kingdoms:</legend>
                     <label><input type="checkbox" id="selectAll">เลือกทั้งหมด</label><br>
                     <?php
-                    // เช็คค่าของ kingdoms ที่ถูกเลือกหลังจากการส่งฟอร์ม
                     $selected_kingdoms = isset($_POST['kingdoms']) ? $_POST['kingdoms'] : array();
 
                     $kingdoms = [
@@ -312,7 +307,6 @@ try {
                     ];
 
                     foreach ($kingdoms as $kingdom => $label) {
-                        // ตรวจสอบว่า checkbox ถูกเลือกหรือไม่
                         $is_checked = in_array($kingdom, $selected_kingdoms) ? 'checked' : '';
                         echo "<label><input type='checkbox' name='kingdoms[]' value='$kingdom' $is_checked> $label</label><br>";
                     }
@@ -366,180 +360,153 @@ try {
             document.getElementById('searchByName').style.display = searchType === 'name' ? 'block' : 'none';
         }
 
-
         window.onload = function () {
             toggleSearchFields();
 
-            // ตรวจสอบการมีอยู่ของ message แล้วแสดง alert
             var message = "<?php echo $message; ?>";
             if (message) {
                 setTimeout(function () {
                     alert(message);
-                }, 300); // Delay the alert by 300ms
+                }, 300);
             }
 
             var selectAllCheckbox = document.getElementById('selectAll');
             var kingdomCheckboxes = document.querySelectorAll('input[name="kingdoms[]"]');
 
-            // ฟังก์ชันเพื่อติ๊ก checkbox ทั้งหมด
             function checkAllCheckboxes() {
                 kingdomCheckboxes.forEach(checkbox => checkbox.checked = true);
                 selectAllCheckbox.checked = true;
             }
 
-            // ฟังก์ชันเพื่อตรวจสอบสถานะ Select All
             function updateSelectAllStatus() {
                 var allChecked = Array.from(kingdomCheckboxes).every(checkbox => checkbox.checked);
                 selectAllCheckbox.checked = allChecked;
             }
             updateSelectAllStatus();
 
-            // Event listener สำหรับ Select All checkbox
             selectAllCheckbox.addEventListener('change', function () {
                 var isChecked = this.checked;
                 kingdomCheckboxes.forEach(checkbox => checkbox.checked = isChecked);
             });
 
-            // เพิ่ม event listener ให้ checkbox แต่ละตัวเพื่อตรวจสอบสถานะ Select All
             kingdomCheckboxes.forEach(checkbox => {
                 checkbox.addEventListener('change', updateSelectAllStatus);
             });
 
-            // Reset button functionality
             document.getElementById('resetButton').addEventListener('click', function () {
-                // Reset all checkboxes
                 checkAllCheckboxes();
-
-                // Reset the form fields
                 document.querySelector('form').reset();
-
-                // Reset the search type and show the appropriate fields
-                document.getElementById('searchType').value = 'year'; // Default value
+                document.getElementById('searchType').value = 'year';
                 toggleSearchFields();
             });
 
+            var map = L.map('map', {
+                scrollWheelZoom: false,
+                doubleClickZoom: false,
+                dragging: true,
+                zoomControl: true,
+                boxZoom: false,
+                touchZoom: false
+            }).setView([12.923828640427846, 100.8822441508516], 6);
 
-            // Display marker with ID 1
-            var markerId1 = locations.find(location => location.id == 1);
-            if (markerId1) {
-                var popupContent = `
-                    <div style="text-align: center;">
-                        <img src="${markerId1.imgplace}" alt="${markerId1.name}" style="width: 200px; height: auto; margin-bottom: 8px;">
-                        <p style="margin-top: 8px;">
-                            <a href="${markerId1.url}" target="_blank">
-                                <img src="https://logoeps.com/wp-content/uploads/2014/05/49360-wikipedia-logo-icon-vector-icon-vector-eps.png" alt="Wikipedia" style="width: 30px; height: auto; margin-right: 0px;">
-                            </a>
-                        </p>
-                        <h3 style="margin-bottom: 8px;">${markerId1.kingdomname}</h3>
-                        <p>${markerId1.relationship}</p>
-                        <p>พระนาม : ${markerId1.name}</p>
-                        <p>พระองค์ก่อนหน้า : ${markerId1.before ? markerId1.before : 'ไม่ปรากฏ'}</p>
-                        <p>พระองค์ถัดไป : ${markerId1.after ? markerId1.after : 'ไม่ปรากฏ'}</p>
-                        <p>ปกครอง : พ.ศ. ${markerId1.reignstart ? markerId1.reignstart : 'ไม่ปรากฏ'} - พ.ศ. ${markerId1.reignend ? markerId1.reignend : 'ไม่ปรากฏ'}</p>
-                        <p>ปกครอง : ค.ศ. ${convertToCE(markerId1.reignstart)} - ค.ศ. ${convertToCE(markerId1.reignend)}</p>
-                    </div>
-                `;
+            L.tileLayer('https://api.maptiler.com/maps/streets-v2/{z}/{x}/{y}.png?key=Qy0caTTPn0K7S8WaoZ1d', {
+                attribution: '<a href="https://www.maptiler.com/copyright/" target="_blank">&copy; MapTiler</a> <a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>'
+            }).addTo(map);
 
-                // Add marker to map
-                L.marker([markerId1.latitude, markerId1.longitude]).addTo(map)
-                    .bindPopup(popupContent)
-                    .openPopup();
+            var locations = <?php echo $locationsJson; ?>;
+
+            if (Array.isArray(locations) && locations.length) {
+                var markersMap = {};
+
+                locations.forEach(function (location) {
+                    if (location.latitude && location.longitude) {
+                        var reignStartCE = convertToCE(location.reignstart);
+                        var reignEndCE = convertToCE(location.reignend);
+
+                        var key = location.latitude + ',' + location.longitude + ',' + location.kingdomname;
+
+                        if (!markersMap[key]) {
+                            markersMap[key] = [];
+                        }
+
+                        markersMap[key].push({
+                            reignStartCE: reignStartCE,
+                            reignEndCE: reignEndCE,
+                            popupContent: `
+                            <div style="text-align: center;">
+                                <img src="${location.imgplace}" alt="${location.name}" style="width: 200px; height: auto; margin-bottom: 8px;">
+                                <p style="margin-top: 8px;">
+                                    <a href="${location.url}" target="_blank">
+                                        <img src="https://logoeps.com/wp-content/uploads/2014/05/49360-wikipedia-logo-icon-vector-icon-vector-eps.png" alt="Wikipedia" style="width: 30px; height: auto; margin-right: 0px;">
+                                    </a>
+                                </p>
+                                <h3 style="margin-bottom: 8px;">${location.kingdomname}</h3>
+                                <p>${location.relationship}</p>
+                                <p>พระนาม : ${location.name}</p>
+                                <p>พระองค์ก่อนหน้า : ${location.before ? location.before : 'ไม่ปรากฏ'}</p>
+                                <p>พระองค์ถัดไป : ${location.after ? location.after : 'ไม่ปรากฏ'}</p>
+                                <p>ปกครอง : พ.ศ. ${location.reignstart ? location.reignstart : 'ไม่ปรากฏ'} - พ.ศ. ${location.reignend ? location.reignend : 'ไม่ปรากฏ'}</p>
+                                <p>ปกครอง : ค.ศ. ${reignStartCE} - ค.ศ. ${reignEndCE}</p>
+                                <button onclick="goToFamilyTree('${location.kingdomname}', '${location.name}')">ไปยัง Family Tree</button>
+                            </div>
+                            `
+                        });
+                    } else {
+                        console.warn('Invalid location data:', location);
+                    }
+                });
+
+                Object.keys(markersMap).forEach(function (key) {
+                    var parts = key.split(',');
+                    var baseLatitude = parseFloat(parts[0]);
+                    var baseLongitude = parseFloat(parts[1]);
+                    var kingdomName = parts[2];
+
+                    markersMap[key].forEach(function (markerData, index) {
+                        var latitude = baseLatitude + (index * 0.15);
+                        var longitude = baseLongitude + (index * 0.15);
+
+                        L.marker([latitude, longitude])
+                            .bindPopup(markerData.popupContent, {
+                                closeOnClick: false,
+                                autoClose: false
+                            })
+                            .addTo(map);
+                    });
+                });
+            } else {
+                console.warn('No location data available.');
             }
+
         }
 
         function convertToCE(buddhistYear) {
             return buddhistYear !== null ? buddhistYear - 543 : 'ไม่ปรากฏ';
         }
 
-        var map = L.map('map', {
-            scrollWheelZoom: false,
-            doubleClickZoom: false,
-            dragging: true,
-            zoomControl: true,
-            boxZoom: false,
-            touchZoom: false
-        }).setView([12.923828640427846, 100.8822441508516], 6);
+        function goToFamilyTree(kingdom, name) {
+            let kingdomTableMap = {
+                'ฟูนาน': 'funan',
+                'อาณาจักรตามพรลิงค์': 'tampornling',
+                'เจนละ': 'janela',
+                'หริภุญชัย': 'hripunchai',
+                'อาณาจักรศรีวิชัย': 'srivichai',
+                'อาณาจักรพระนคร': 'panakorn',
+                'อาณาจักรละโว้': 'lavo',
+                'อาณาจักรสุโขทัย': 'sukothai',
+                'อาณาจักรล้านนา': 'lanna',
+                'อาณาจักรอยุธยา': 'ayuttaya',
+                'อาณาจักรล้านช้าง': 'lanchang',
+                'สมัยละแวก': 'kamenravak',
+                'กรุงรัตนโกสินทร์': 'ratanakosin'
+            };
 
-        L.tileLayer('https://api.maptiler.com/maps/streets-v2/{z}/{x}/{y}.png?key=Qy0caTTPn0K7S8WaoZ1d', {
-            attribution: '<a href="https://www.maptiler.com/copyright/" target="_blank">&copy; MapTiler</a> <a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>'
-        }).addTo(map);
+            let table = kingdomTableMap[kingdom];
+            let encodedName = encodeURIComponent(name);
 
-        var locations = <?php echo $locationsJson; ?>;
-
-        if (Array.isArray(locations) && locations.length) {
-            // สร้าง Object เพื่อจัดการกับตำแหน่งที่ซ้ำกัน
-            var markersMap = {};
-
-            // เพิ่มค่า latitude สำหรับแต่ละ Marker ที่ซ้ำกัน
-            locations.forEach(function (location) {
-                if (location.latitude && location.longitude) {
-                    var reignStartCE = convertToCE(location.reignstart);
-                    var reignEndCE = convertToCE(location.reignend);
-
-                    var key = location.latitude + ',' + location.longitude + ',' + location.kingdomname;
-
-                    if (!markersMap[key]) {
-                        markersMap[key] = [];
-                    }
-
-                    markersMap[key].push({
-                        reignStartCE: reignStartCE,
-                        reignEndCE: reignEndCE,
-                        popupContent: `
-                <div style="text-align: center;">
-                    <img src="${location.imgplace}" alt="${location.name}" style="width: 200px; height: auto; margin-bottom: 8px;">
-                    <p style="margin-top: 8px;">
-                        <a href="${location.url}" target="_blank">
-                            <img src="https://logoeps.com/wp-content/uploads/2014/05/49360-wikipedia-logo-icon-vector-icon-vector-eps.png" alt="Wikipedia" style="width: 30px; height: auto; margin-right: 0px;">
-                        </a>
-                    </p>
-                    <h3 style="margin-bottom: 8px;">${location.kingdomname}</h3>
-                    <p>${location.relationship}</p>
-                    <p>พระนาม : ${location.name}</p>
-                    <p>พระองค์ก่อนหน้า : ${location.before ? location.before : 'ไม่ปรากฏ'}</p>
-                    <p>พระองค์ถัดไป : ${location.after ? location.after : 'ไม่ปรากฏ'}</p>
-                    <p>ปกครอง : พ.ศ. ${location.reignstart ? location.reignstart : 'ไม่ปรากฏ'} - พ.ศ. ${location.reignend ? location.reignend : 'ไม่ปรากฏ'}</p>
-                    <p>ปกครอง : ค.ศ. ${reignStartCE} - ค.ศ. ${reignEndCE}</p>
-                </div>
-            `
-                    });
-                } else {
-                    console.warn('Invalid location data:', location);
-                }
-            });
-            
-
-            // แสดง Marker บนแผนที่
-            Object.keys(markersMap).forEach(function (key) {
-                var parts = key.split(',');
-                var baseLatitude = parseFloat(parts[0]);
-                var baseLongitude = parseFloat(parts[1]);
-                var kingdomName = parts[2];
-
-                markersMap[key].forEach(function (markerData, index) {
-                    var latitude = baseLatitude + (index * 0.15); // เพิ่มค่า latitude เพื่อแยก Marker ที่ซ้อนกัน
-                    var longitude = baseLongitude + (index * 0.15);
-
-                    L.marker([latitude, longitude])
-                        .bindPopup(markerData.popupContent, {
-                            closeOnClick: false, // ไม่ปิด popup เมื่อคลิกที่ popup อื่น
-                            autoClose: false // ไม่ปิด popup อื่นเมื่อเปิด popup ใหม่
-                        })
-                        .addTo(map);
-                });
-            });
-        } else {
-            console.warn('No location data available.');
+            let url = `family_tree.php?table=${table}&search=${encodedName}`;
+            window.location.href = url;
         }
-
-
-        // "Select All" functionality
-        document.getElementById('selectAll').addEventListener('change', function () {
-            var checkboxes = document.querySelectorAll('input[name="kingdoms[]"]');
-            for (var checkbox of checkboxes) {
-                checkbox.checked = this.checked;
-            }
-        });
     </script>
 </body>
 
