@@ -128,7 +128,8 @@
             <option value="kamenravak">สมัยละแวก</option>
             <option value="ratanakosin">กรุงรัตนโกสินทร์</option>
         </select>
-        <input type="text" id="searchInput" placeholder="ค้นหาชื่อ..." />
+        <input type="text" id="searchInput" placeholder="ค้นหาชื่อ..." autocomplete="off" />
+
         <button id="resetSearch">รีเซ็ต</button>
     </div>
     <div id="loading" style="display:none;">Loading...</div>
@@ -149,11 +150,8 @@
 
             OrgChart.templates.ana.defs =
                 `<g transform="matrix(0.05,0,0,0.05,-12,-9)" id="heart">
-        <path fill="#F57C00" d="M438.482,58.61c-24.7-26.549-59.311-41.655-95.573-41.711c-36.291,0.042-70.938,15.14-95.676,41.694l-8.431,8.909  
-        l-8.431-8.909C181.284,5.762,98.663,2.728,45.832,51.815c-2.341,2.176-4.602,4.436-6.778,6.778 
-        c-52.072,56.166-52.072,142.968,0,199.134l187.358,197.581c6.482,6.843,17.284,7.136,24.127,0.654 
-        c0.224-0.212,0.442-0.43,0.654-0.654l187.29-197.581C490.551,201.567,490.551,114.77,438.482,58.61z"/>
-    <g>`;
+        <!-- Your SVG definitions -->
+    </g>`; // Custom icon template
 
             OrgChart.templates.ana.field_0 =
                 '<text data-width="230" data-text-overflow="ellipsis" style="font-size: 20px;" fill="#000000" x="125" y="100" text-anchor="middle">{val}</text>';
@@ -175,8 +173,10 @@
             };
 
             const loadFamilyData = (table) => {
-                searchInput.value = ''; // ล้างช่องค้นหาเมื่อเปลี่ยนอาณาจักร
                 loadingIndicator.style.display = 'block';
+                searchInput.value = ''; // Explicitly clear the search input when loading new data
+                document.title = `${tableSelect.options[tableSelect.selectedIndex].text} Family Tree`; // Update title
+
                 return fetchFamilyData(table)
                     .then(familyData => {
                         if (!Array.isArray(familyData)) {
@@ -261,17 +261,6 @@
                 };
             };
 
-            const findDescendants = (nodeId, nodes) => {
-                let descendants = [];
-                nodes.forEach(node => {
-                    if (node.pid === nodeId) {
-                        descendants.push(node);
-                        descendants = descendants.concat(findDescendants(node.id, nodes));
-                    }
-                });
-                return descendants;
-            };
-
             const handleSearch = debounce(function () {
                 const searchTerm = searchInput.value.toLowerCase();
                 if (chart) {
@@ -289,6 +278,17 @@
                     chart.load([...finalNodes]);
                 }
             }, 300);
+
+            const findDescendants = (nodeId, nodes) => {
+                let descendants = [];
+                nodes.forEach(node => {
+                    if (node.pid === nodeId) {
+                        descendants.push(node);
+                        descendants = descendants.concat(findDescendants(node.id, nodes));
+                    }
+                });
+                return descendants;
+            };
 
             searchInput.addEventListener('input', handleSearch);
 
@@ -312,7 +312,7 @@
                     searchInput.value = decodeURIComponent(searchName);
                     handleSearch();
                 } else {
-                    searchInput.value = '';
+                    searchInput.value = '';  // Clear search input if table is changed or no searchName in URL
                 }
 
                 if (selectedId && chart) {
@@ -336,6 +336,9 @@
             }
 
             tableSelect.addEventListener('change', function () {
+                searchInput.value = '';  // Clear search input immediately on kingdom change
+                const newUrl = window.location.href.split('?')[0]; // Remove query parameters
+                window.history.replaceState({}, document.title, newUrl); // Replace URL without reloading
                 isTableChanged = true;
                 loadFamilyData(this.value).then(() => {
                     isTableChanged = false;
@@ -343,6 +346,7 @@
                 });
             });
         });
+
     </script>
 
 </body>

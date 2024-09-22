@@ -61,6 +61,10 @@ pg_close($conn);
             padding: 0;
             background-color: #f0f2f5;
             color: #333;
+            font-size: 14px;
+            /* เพิ่มขนาดฟอนต์โดยรวม */
+            line-height: 1.6;
+            /* เพิ่มความสูงของบรรทัด */
         }
 
         header {
@@ -179,30 +183,44 @@ pg_close($conn);
 
         .timeline-item {
             border: 1px solid #ced4da;
-            border-radius: 8px;
-            background-color: #ffffff;
+            border-radius: 5px;
+            /* เพิ่มความโค้งมนให้กับขอบ */
+            background-color: #f8f9fa;
+            /* สีพื้นหลังอ่อน */
             text-align: center;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
             transition: transform 0.2s ease-in-out, z-index 0.2s ease;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            padding: 10px;
+            padding: 8px;
+            /* ลด padding ให้เหลือน้อยลง */
             font-size: 12px;
-            min-width: 80px;
+            min-width: 100px;
+            /* ปรับขนาดขั้นต่ำของไอเทม */
             position: absolute;
             z-index: 1;
+            margin-bottom: 15px;
+            /* เพิ่มระยะห่างระหว่างไอเทม */
         }
 
         .timeline-item:hover {
-            transform: translateY(-5px);
+            transform: translateY(-3px) scale(1.02);
+            /* ขยายเล็กน้อยและยกขึ้นเมื่อโฮเวอร์ */
+            background-color: #e2e6ea;
+            /* เพิ่มสีพื้นหลังที่เข้มขึ้นเมื่อโฮเวอร์ */
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
             z-index: 10;
+            transition: transform 0.3s ease, background-color 0.3s ease;
+            /* เพิ่มเอฟเฟกต์การเคลื่อนไหว */
         }
 
         .timeline-item h3 {
             margin: 0;
-            font-size: 14px;
+            font-size: 12px;
+            /* ลดขนาดฟอนต์ */
+            line-height: 1.5;
+            /* เพิ่มความสูงของบรรทัด */
             color: #333;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -211,8 +229,10 @@ pg_close($conn);
 
         .timeline-item p {
             margin: 2px 0;
-            font-size: 12px;
-            color: #333;
+            font-size: 11px;
+            /* ลดขนาดฟอนต์ */
+            color: #555;
+            /* ปรับสีให้ไม่เข้มเกินไป */
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
@@ -221,12 +241,6 @@ pg_close($conn);
         .timeline-item p:last-child {
             font-weight: bold;
             color: #333;
-        }
-
-        .timeline-item .timestamp {
-            font-size: 12px;
-            color: #888;
-            margin-top: 5px;
         }
 
         #toggle-zoom {
