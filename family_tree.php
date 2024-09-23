@@ -232,7 +232,7 @@
                                     }
                                 },
                                 template: "ana",
-                                enableSearch: true,
+                                enableSearch: false,
                                 searchFields: ["ชื่อ"],
                             });
                         }

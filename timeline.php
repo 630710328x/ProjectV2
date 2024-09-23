@@ -177,6 +177,7 @@ pg_close($conn);
             border-radius: 10px;
             box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
             overflow-x: auto;
+            margin-top: 30px;
         }
 
         .timeline-item {
@@ -261,12 +262,14 @@ pg_close($conn);
         }
 
         .year-label {
+            display: inline-block;
             position: absolute;
             font-weight: bold;
             font-size: 12px;
             color: #333;
             transform: translateX(-50%);
             text-align: center;
+            white-space: nowrap;
         }
 
         select {
