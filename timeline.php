@@ -53,7 +53,7 @@ pg_close($conn);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Timeline with Timestamps</title>
+    <title>Timeline Overview</title>
     <style>
         body {
             font-family: 'Helvetica Neue', Arial, sans-serif;
@@ -62,9 +62,7 @@ pg_close($conn);
             background-color: #f0f2f5;
             color: #333;
             font-size: 14px;
-            /* เพิ่มขนาดฟอนต์โดยรวม */
             line-height: 1.6;
-            /* เพิ่มความสูงของบรรทัด */
         }
 
         header {
@@ -184,9 +182,7 @@ pg_close($conn);
         .timeline-item {
             border: 1px solid #ced4da;
             border-radius: 5px;
-            /* เพิ่มความโค้งมนให้กับขอบ */
             background-color: #f8f9fa;
-            /* สีพื้นหลังอ่อน */
             text-align: center;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
             transition: transform 0.2s ease-in-out, z-index 0.2s ease;
@@ -194,33 +190,24 @@ pg_close($conn);
             overflow: hidden;
             text-overflow: ellipsis;
             padding: 8px;
-            /* ลด padding ให้เหลือน้อยลง */
             font-size: 12px;
-            min-width: 100px;
-            /* ปรับขนาดขั้นต่ำของไอเทม */
             position: absolute;
             z-index: 1;
             margin-bottom: 15px;
-            /* เพิ่มระยะห่างระหว่างไอเทม */
         }
 
         .timeline-item:hover {
             transform: translateY(-3px) scale(1.02);
-            /* ขยายเล็กน้อยและยกขึ้นเมื่อโฮเวอร์ */
             background-color: #e2e6ea;
-            /* เพิ่มสีพื้นหลังที่เข้มขึ้นเมื่อโฮเวอร์ */
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
             z-index: 10;
             transition: transform 0.3s ease, background-color 0.3s ease;
-            /* เพิ่มเอฟเฟกต์การเคลื่อนไหว */
         }
 
         .timeline-item h3 {
             margin: 0;
             font-size: 12px;
-            /* ลดขนาดฟอนต์ */
             line-height: 1.5;
-            /* เพิ่มความสูงของบรรทัด */
             color: #333;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -230,9 +217,7 @@ pg_close($conn);
         .timeline-item p {
             margin: 2px 0;
             font-size: 11px;
-            /* ลดขนาดฟอนต์ */
             color: #555;
-            /* ปรับสีให้ไม่เข้มเกินไป */
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
@@ -243,38 +228,45 @@ pg_close($conn);
             color: #333;
         }
 
-        #toggle-zoom {
-            position: fixed;
-            bottom: 20px;
-            left: 20px;
-            z-index: 1000;
-            background-color: #007bff;
-            color: #fff;
-            border: none;
-            padding: 12px 24px;
-            font-size: 16px;
+        .timeline-row {
+            position: relative;
+            margin-bottom: 50px;
+            padding-top: 40px;
+            padding-left: 150px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .kingdom-label {
+            position: absolute;
+            left: 0;
+            top: 0;
             font-weight: bold;
-            border-radius: 5px;
-            cursor: pointer;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            transition: background-color 0.3s ease, transform 0.2s ease;
+            font-size: 18px;
+            color: #333;
         }
 
-        #toggle-zoom:hover {
-            background-color: #0056b3;
-            transform: translateY(-3px);
-            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.2);
+        .year-labels {
+            position: relative;
+            height: 40px;
+            margin-bottom: 10px;
+            white-space: nowrap;
+            left: 150px;
         }
 
-        #toggle-zoom:active {
-            transform: translateY(0);
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        .vertical-line {
+            position: absolute;
+            width: 1px;
+            height: 100%;
+            background-color: #ccc;
         }
 
-        .button-container {
-            display: flex;
-            justify-content: center;
-            margin-top: 20px;
+        .year-label {
+            position: absolute;
+            font-weight: bold;
+            font-size: 12px;
+            color: #333;
+            transform: translateX(-50%);
+            text-align: center;
         }
 
         select {
@@ -318,7 +310,7 @@ pg_close($conn);
 
 <body>
     <header>
-        <h1>Timeline</h1>
+        <h1>Timeline Overview</h1>
         <nav>
             <ul>
                 <li><a href="index.php">Home</a></li>
@@ -345,9 +337,6 @@ pg_close($conn);
                 <option value="christian">ค.ศ.</option>
             </select>
         </div>
-        <div class="button-container">
-            <button id="toggle-zoom">ดูภาพรวม</button>
-        </div>
         <div class="timeline-wrapper" id="timeline-wrapper">
             <!-- Timeline rows will be generated here by JavaScript -->
         </div>
@@ -362,7 +351,6 @@ pg_close($conn);
             const selectAllCheckbox = document.getElementById('select-all');
             const yearFormatSelect = document.getElementById('year-format');
 
-            // Map kingdom names to Thai
             const kingdomNames = {
                 'funan': 'ฟูนาน',
                 'tampornling': 'อาณาจักรตามพรลิงค์',
@@ -379,23 +367,8 @@ pg_close($conn);
                 'ratanakosin': 'กรุงรัตนโกสินทร์'
             };
 
-            let zoomLevel = 1;
-            let isZoomedOut = false;
-            const toggleZoomButton = document.getElementById('toggle-zoom');
+            const zoomLevel = 1 / 60;
             let minYearSelected, maxYear;
-
-            toggleZoomButton.addEventListener('click', () => {
-                if (isZoomedOut) {
-                    zoomLevel = 1;
-                    toggleZoomButton.textContent = 'ดูภาพรวม';
-                } else {
-                    zoomLevel = 1 / 60;
-                    toggleZoomButton.textContent = 'ดูแบบปกติ';
-                }
-                isZoomedOut = !isZoomedOut;
-                renderTimeline();
-                renderYearLabels(minYearSelected, maxYear);
-            });
 
             function renderCheckboxes() {
                 const kingdoms = [...new Set(timelineData.map(item => item.kingdomname))];
@@ -410,16 +383,10 @@ pg_close($conn);
 
                     label.setAttribute('for', checkbox.id);
                     label.appendChild(checkbox);
-                    label.appendChild(document.createTextNode(kingdomNames[kingdom] || kingdom)); // Use Thai name if available
+                    label.appendChild(document.createTextNode(kingdomNames[kingdom] || kingdom));
                     filterContainer.appendChild(label);
 
                     const legendItem = document.createElement('div');
-                    legendItem.style.display = 'flex';
-                    legendItem.style.alignItems = 'center';
-                    legendItem.style.marginRight = '20px';
-                    legendItem.style.fontSize = '16px';
-                    legendItem.style.fontWeight = 'bold';
-                    legendItem.style.textAlign = 'center';
                     legendItem.innerHTML = `
                         <div style="background-color: ${getColorForKingdom(kingdom)}; width: 20px; height: 20px; border-radius: 50%;"></div>
                         <span style="margin-left: 10px;">${kingdomNames[kingdom] || kingdom}</span>
@@ -472,32 +439,26 @@ pg_close($conn);
                 timelineItems.classList.add('timeline-items');
 
                 const kingdoms = [...new Set(filteredData.map(item => item.kingdomname))];
-                kingdoms.forEach((kingdom, index) => {
+                kingdoms.forEach((kingdom) => {
                     const rowDiv = document.createElement('div');
-                    rowDiv.classList.add('timeline-items');
-                    rowDiv.style.marginBottom = '80px';
-                    rowDiv.style.paddingTop = '30px';
-                    rowDiv.style.position = 'relative';
+                    rowDiv.classList.add('timeline-row');
 
                     const kingdomLabel = document.createElement('div');
                     kingdomLabel.classList.add('kingdom-label');
-                    kingdomLabel.textContent = kingdomNames[kingdom] || kingdom; // Use Thai name
-                    kingdomLabel.style.position = 'absolute';
-                    kingdomLabel.style.left = '0px';
-                    kingdomLabel.style.top = '50%';
-                    kingdomLabel.style.transform = 'translateY(-50%)';
-                    kingdomLabel.style.fontWeight = 'bold';
-                    kingdomLabel.style.fontSize = '18px';
-                    kingdomLabel.style.color = '#333';
-
+                    kingdomLabel.textContent = kingdomNames[kingdom] || kingdom;
                     rowDiv.appendChild(kingdomLabel);
 
                     const items = filteredData.filter(item => item.kingdomname === kingdom);
+
                     items.forEach(item => {
+                        const startLeft = getPositionLeft(item.reignstart, minYearSelected);
+                        const endLeft = getPositionLeft(item.reignend, minYearSelected);
                         const itemDiv = document.createElement('div');
                         itemDiv.classList.add('timeline-item');
-                        itemDiv.style.left = `${getPositionLeft(item.reignstart, minYearSelected)}px`;
-                        itemDiv.style.width = `${getWidth(item.reignstart, item.reignend, item.name)}px`;
+                        itemDiv.style.left = `${startLeft}px`;
+                        itemDiv.style.width = `${Math.max(endLeft - startLeft, 80)}px`; // ใช้ความกว้างตามปี
+                        itemDiv.style.top = `${0}px`; // ตำแหน่ง Y ของ item
+
                         itemDiv.style.backgroundColor = getColorForKingdom(item.kingdomname);
 
                         itemDiv.innerHTML = `
@@ -505,18 +466,9 @@ pg_close($conn);
                             <p>${formatYear(item.reignstart)} - ${formatYear(item.reignend)}</p>
                         `;
 
-                        // Add click event to redirect to family_tree.php with search parameter
                         itemDiv.addEventListener('click', () => {
                             const searchName = encodeURIComponent(item.name);
                             window.location.href = `family_tree.php?id=${item.id}&table=${item.kingdomname}&search=${searchName}`;
-                        });
-
-                        itemDiv.addEventListener('mouseenter', () => {
-                            itemDiv.style.zIndex = '999';
-                        });
-
-                        itemDiv.addEventListener('mouseleave', () => {
-                            itemDiv.style.zIndex = '1';
                         });
 
                         rowDiv.appendChild(itemDiv);
@@ -526,6 +478,30 @@ pg_close($conn);
                 });
 
                 timelineWrapper.appendChild(timelineItems);
+                renderVerticalLines(minYearSelected, maxYear);
+            }
+
+            function renderVerticalLines(minYear, maxYear) {
+                const existingLines = document.querySelectorAll('.vertical-line');
+                existingLines.forEach(line => line.remove());
+
+                const yearInterval = 100; // ปรับช่วงปีตามต้องการ
+
+                for (let year = minYear; year <= maxYear; year += yearInterval) {
+                    const positionLeft = getPositionLeft(year, minYear);
+
+                    const lineDiv = document.createElement('div');
+                    lineDiv.classList.add('vertical-line');
+                    lineDiv.style.left = `${positionLeft}px`;
+
+                    const yearLabel = document.createElement('div');
+                    yearLabel.classList.add('year-label');
+                    yearLabel.textContent = formatYear(year);
+                    yearLabel.style.left = `${positionLeft}px`;
+
+                    timelineWrapper.appendChild(lineDiv);
+                    timelineWrapper.appendChild(yearLabel);
+                }
             }
 
             function renderYearLabels(minYear, maxYear) {
@@ -536,37 +512,43 @@ pg_close($conn);
 
                 const yearContainer = document.createElement('div');
                 yearContainer.classList.add('year-labels');
-                yearContainer.style.position = 'relative';
-                yearContainer.style.height = '40px';
-                yearContainer.style.marginBottom = '20px';
-                yearContainer.style.whiteSpace = 'nowrap';
 
-                const yearInterval = isZoomedOut ? 100 : 10;
+                const yearInterval = 100; // ปรับช่วงปีตามต้องการ
 
                 for (let year = minYear; year <= maxYear; year += yearInterval) {
+                    const positionLeft = getPositionLeft(year, minYear);
+
                     const yearDiv = document.createElement('div');
                     yearDiv.textContent = formatYear(year);
-                    yearDiv.style.position = 'absolute';
-                    yearDiv.style.left = `${getPositionLeft(year, minYear)}px`;
-                    yearDiv.style.transform = 'translateX(20%)';
+                    yearDiv.style.left = `${positionLeft}px`;
+                    yearDiv.style.transform = 'translateX(-50%)';
                     yearDiv.style.fontWeight = 'bold';
-                    yearDiv.style.fontSize = isZoomedOut ? '12px' : '14px';
+                    yearDiv.style.fontSize = '14px';
+                    yearDiv.style.borderLeft = '2px dashed #bbb';
+                    yearDiv.style.paddingLeft = '5px';
+
                     yearContainer.appendChild(yearDiv);
                 }
 
                 timelineWrapper.insertBefore(yearContainer, timelineWrapper.firstChild);
             }
 
+            function getPositionLeft(year, minYear) {
+                const offsetFromKingdomLabel = 200; // ค่าระยะห่างจากชื่ออาณาจักร
+                const yearWidth = 180 * zoomLevel;  // กำหนดความกว้างต่อปี
+                return (year - minYear) * yearWidth + offsetFromKingdomLabel;
+            }
+
             function formatYear(year) {
                 if (year === null) {
-                    return 'ไม่ปรากฎ'; // ถ้าปีเป็น null ให้แสดง null
+                    return 'ไม่ปรากฎ';
                 }
 
                 const format = yearFormatSelect.value;
                 if (format === 'buddhist') {
                     return `พ.ศ. ${year}`;
                 } else {
-                    return `ค.ศ. ${year - 543}`; // แปลง พ.ศ. เป็น ค.ศ.
+                    return `ค.ศ. ${year - 543}`;
                 }
             }
 
@@ -574,19 +556,6 @@ pg_close($conn);
                 renderTimeline();
                 renderYearLabels(minYearSelected, maxYear);
             });
-
-            function getPositionLeft(year, minYear) {
-                const yearWidth = 150 * zoomLevel;
-                return (year - minYear) * yearWidth;
-            }
-
-            function getWidth(startYear, endYear, name) {
-                const yearWidth = 150 * zoomLevel;
-                const baseWidth = yearWidth * (endYear - startYear + 1); // คำนวณความกว้างจากปี
-                const text = `${name} (${formatYear(startYear)} - ${formatYear(endYear)})`;
-                const textWidth = Math.max(text.length * 8, 80); // คำนวณความกว้างตามความยาวของข้อความ (8px ต่ออักขระ)
-                return Math.max(baseWidth, textWidth); // ให้คืนค่าความกว้างที่มากกว่าระหว่างสองค่า
-            }
 
             function getColorForKingdom(kingdom) {
                 const colors = [
@@ -618,3 +587,4 @@ pg_close($conn);
 </body>
 
 </html>
+
