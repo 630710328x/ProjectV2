@@ -37,17 +37,21 @@ try {
     // Assuming input year, name, and relationship are provided via POST method
     $inputYear = isset($_POST['year']) ? intval($_POST['year']) : null;
     $eraType = isset($_POST['era']) ? $_POST['era'] : 'CE';
+    $beforeAP = isset($_POST['beforeAP']) ? $_POST['beforeAP'] : 'normalAP';
     $inputName = isset($_POST['name']) ? trim($_POST['name']) : null;
     $inputRelationship = isset($_POST['relationship']) ? trim($_POST['relationship']) : null;
     $reset = isset($_POST['reset']) ? true : false;
 
-    // Convert Christian Era to Buddhist Era
+    // Convert Christian Era to Buddhist Era or Rattanakosin Era
     if ($eraType === 'CE' && $inputYear !== null) {
         $inputYear += 543;
-    }
-
-    if ($eraType === 'AP' && $inputYear !== null) {
-        $inputYear += 2324;
+    } elseif ($eraType === 'AP' && $inputYear !== null) {
+        if ($beforeAP === 'beforeAP') {
+            // Calculate the corresponding Buddhist Era for "ก่อน ร.ศ."
+            $inputYear = abs(2324 - $inputYear); // This will be the Buddhist Era (พ.ศ.) to use in the query
+        } else {
+            $inputYear += 2324; // Normal ร.ศ. year conversion
+        }
     }
 
     // Process the relationship input for searching "รัชกาลที่"
@@ -89,20 +93,20 @@ try {
             $stmt->bindParam(':relationship', $inputRelationship, PDO::PARAM_STR);
             $stmt->bindParam(':relationshipWithTimes', $relationshipWithTimes, PDO::PARAM_STR);
         } elseif ($inputYear !== null) {
+            // Normal or "ก่อน ร.ศ." search logic
             $stmt = $pdo->prepare("
-    SELECT latitude, longitude, name, kingdomname, url, imgplace, reignstart, reignend, after, before, relationship 
-    FROM $table 
-    WHERE (:year BETWEEN reignstart AND reignend)
-    OR (:year = reignstart)
-    OR (:year = reignend)
-");
+                SELECT latitude, longitude, name, kingdomname, url, imgplace, reignstart, reignend, after, before, relationship 
+                FROM $table 
+                WHERE (:year BETWEEN reignstart AND reignend)
+                OR (:year = reignstart)
+                OR (:year = reignend)
+            ");
             $stmt->bindParam(':year', $inputYear, PDO::PARAM_INT);
-
         }
         $stmt->execute();
         $locations = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        // Append normal search results to allLocations
+        // Append search results to allLocations
         foreach ($locations as $location) {
             $allLocations[] = $location;
         }
@@ -271,6 +275,7 @@ try {
             $inputName = null;
             $inputRelationship = null;
             $eraType = 'CE';
+            $beforeAP = 'normalAP';
         } elseif (isset($_POST['searchType'])) {
             if (empty($allLocations)) {
                 $message = 'ไม่มีข้อมูลที่ต้องการค้นหา';
@@ -325,12 +330,21 @@ try {
                     <label for="year">ใส่ปีศักราช : </label>
                     <input type="number" id="year" name="year"
                         value="<?php echo isset($_POST['reset']) ? '' : (isset($_POST['year']) ? htmlspecialchars($_POST['year']) : ''); ?>">
+
                     <label for="era">เลือกปีศักราช : </label>
-                    <select id="era" name="era">
+                    <select id="era" name="era" onchange="toggleBeforeAPOption()">
                         <option value="BE" <?php echo (!isset($_POST['era']) || $_POST['era'] === 'BE') ? 'selected' : ''; ?>>พุทธศักราช (พ.ศ.)</option>
                         <option value="CE" <?php echo (isset($_POST['era']) && $_POST['era'] === 'CE') ? 'selected' : ''; ?>>คริสต์ศักราช (ค.ศ.)</option>
                         <option value="AP" <?php echo (isset($_POST['era']) && $_POST['era'] === 'AP') ? 'selected' : ''; ?>>รัตนโกสินทรศก (ร.ศ.)</option>
                     </select>
+
+                    <div id="beforeAPOption" style="display: none;">
+                        <label for="beforeAP">เลือกช่วงเวลา :</label>
+                        <select id="beforeAP" name="beforeAP">
+                            <option value="normalAP" <?php echo (isset($_POST['beforeAP']) && $_POST['beforeAP'] === 'normalAP') ? 'selected' : ''; ?>>ร.ศ.</option>
+                            <option value="beforeAP" <?php echo (isset($_POST['beforeAP']) && $_POST['beforeAP'] === 'beforeAP') ? 'selected' : ''; ?>>ก่อน ร.ศ.</option>
+                        </select>
+                    </div>
                 </div>
 
                 <div id="searchByRelationship" style="display: none;">
@@ -360,8 +374,20 @@ try {
             document.getElementById('searchByName').style.display = searchType === 'name' ? 'block' : 'none';
         }
 
+        function toggleBeforeAPOption() {
+            var eraType = document.getElementById('era').value;
+            var beforeAPOption = document.getElementById('beforeAPOption');
+
+            if (eraType === 'AP') {
+                beforeAPOption.style.display = 'block';
+            } else {
+                beforeAPOption.style.display = 'none';
+            }
+        }
+
         window.onload = function () {
             toggleSearchFields();
+            toggleBeforeAPOption(); // Ensure the option is shown/hidden correctly on page load
 
             var message = "<?php echo $message; ?>";
             if (message) {
@@ -398,6 +424,7 @@ try {
                 document.querySelector('form').reset();
                 document.getElementById('searchType').value = 'year';
                 toggleSearchFields();
+                toggleBeforeAPOption(); // Reset the beforeAP option display
             });
 
             var map = L.map('map', {
@@ -423,6 +450,12 @@ try {
                         var reignStartCE = convertToCE(location.reignstart);
                         var reignEndCE = convertToCE(location.reignend);
 
+                        var reignStartAP = convertToAP(location.reignstart);
+                        var reignEndAP = convertToAP(location.reignend);
+
+                        var reignStartBE = convertToBE(location.reignstart);
+                        var reignEndBE = convertToBE(location.reignend);
+
                         var key = location.latitude + ',' + location.longitude + ',' + location.kingdomname;
 
                         if (!markersMap[key]) {
@@ -430,8 +463,12 @@ try {
                         }
 
                         markersMap[key].push({
-                            reignStartCE: reignStartCE,
-                            reignEndCE: reignEndCE,
+                            reignStartCE: reignStartCE !== null ? reignStartCE : 'ไม่ปรากฏ',
+                            reignEndCE: reignEndCE !== null ? reignEndCE : 'ไม่ปรากฏ',
+                            reignStartAP: reignStartAP !== null ? reignStartAP : 'ไม่ปรากฏ',
+                            reignEndAP: reignEndAP !== null ? reignEndAP : 'ไม่ปรากฏ',
+                            reignStartBE: reignStartBE !== null ? reignStartBE : 'ไม่ปรากฏ',
+                            reignEndBE: reignEndBE !== null ? reignEndBE : 'ไม่ปรากฏ',
                             popupContent: `
                             <div style="text-align: center;">
                                 <img src="${location.imgplace}" alt="${location.name}" style="width: 200px; height: auto; margin-bottom: 8px;">
@@ -445,8 +482,9 @@ try {
                                 <p>พระนาม : ${location.name}</p>
                                 <p>พระองค์ก่อนหน้า : ${location.before ? location.before : 'ไม่ปรากฏ'}</p>
                                 <p>พระองค์ถัดไป : ${location.after ? location.after : 'ไม่ปรากฏ'}</p>
-                                <p>ปกครอง : พ.ศ. ${location.reignstart ? location.reignstart : 'ไม่ปรากฏ'} - พ.ศ. ${location.reignend ? location.reignend : 'ไม่ปรากฏ'}</p>
-                                <p>ปกครอง : ค.ศ. ${reignStartCE} - ค.ศ. ${reignEndCE}</p>
+                                <p>ปกครอง : ${reignStartBE} - ${reignEndBE}</p>
+                                <p>ปกครอง : ${reignStartAP} - ${reignEndAP}</p>
+                                <p>ปกครอง : ${reignStartCE} - ${reignEndCE}</p>
                                 <button onclick="goToFamilyTree('${location.kingdomname}', '${location.name}')">ไปยัง Family Tree</button>
                             </div>
                             `
@@ -481,7 +519,23 @@ try {
         }
 
         function convertToCE(buddhistYear) {
-            return buddhistYear !== null ? buddhistYear - 543 : 'ไม่ปรากฏ';
+            return buddhistYear !== null ? `ค.ศ. ${buddhistYear - 543}` : 'ไม่ปรากฏ';
+        }
+
+        function convertToAP(buddhistYear) {
+            if (buddhistYear !== null) {
+                if (buddhistYear >= 2324) {
+                    return `ร.ศ. ${buddhistYear - 2324}`; // Normal ร.ศ.
+                } else {
+                    return `ก่อน ร.ศ. ${2324 - buddhistYear}`; // Before ร.ศ.
+                }
+            } else {
+                return 'ไม่ปรากฏ';
+            }
+        }
+
+        function convertToBE(buddhistYear) {
+            return buddhistYear !== null ? `พ.ศ. ${buddhistYear}` : 'ไม่ปรากฏ';
         }
 
         function goToFamilyTree(kingdom, name) {

@@ -338,6 +338,7 @@ pg_close($conn);
             <select id="year-format">
                 <option value="buddhist" selected>พ.ศ.</option>
                 <option value="christian">ค.ศ.</option>
+                <option value="rattanakosin">ร.ศ.</option>
             </select>
         </div>
         <div class="timeline-wrapper" id="timeline-wrapper">
@@ -459,8 +460,8 @@ pg_close($conn);
                         const itemDiv = document.createElement('div');
                         itemDiv.classList.add('timeline-item');
                         itemDiv.style.left = `${startLeft}px`;
-                        itemDiv.style.width = `${Math.max(endLeft - startLeft, 80)}px`; // ใช้ความกว้างตามปี
-                        itemDiv.style.top = `${0}px`; // ตำแหน่ง Y ของ item
+                        itemDiv.style.width = `${Math.max(endLeft - startLeft, 80)}px`; // Use width based on the year range
+                        itemDiv.style.top = `${0}px`; // Y position of the item
 
                         itemDiv.style.backgroundColor = getColorForKingdom(item.kingdomname);
 
@@ -488,7 +489,7 @@ pg_close($conn);
                 const existingLines = document.querySelectorAll('.vertical-line');
                 existingLines.forEach(line => line.remove());
 
-                const yearInterval = 100; // ปรับช่วงปีตามต้องการ
+                const yearInterval = 100; // Adjust the year interval as needed
 
                 for (let year = minYear; year <= maxYear; year += yearInterval) {
                     const positionLeft = getPositionLeft(year, minYear);
@@ -516,7 +517,7 @@ pg_close($conn);
                 const yearContainer = document.createElement('div');
                 yearContainer.classList.add('year-labels');
 
-                const yearInterval = 100; // ปรับช่วงปีตามต้องการ
+                const yearInterval = 100; // Adjust the year interval as needed
 
                 for (let year = minYear; year <= maxYear; year += yearInterval) {
                     const positionLeft = getPositionLeft(year, minYear);
@@ -537,8 +538,8 @@ pg_close($conn);
             }
 
             function getPositionLeft(year, minYear) {
-                const offsetFromKingdomLabel = 200; // ค่าระยะห่างจากชื่ออาณาจักร
-                const yearWidth = 180 * zoomLevel;  // กำหนดความกว้างต่อปี
+                const offsetFromKingdomLabel = 200; // Distance from the kingdom label
+                const yearWidth = 180 * zoomLevel;  // Width per year
                 return (year - minYear) * yearWidth + offsetFromKingdomLabel;
             }
 
@@ -550,8 +551,15 @@ pg_close($conn);
                 const format = yearFormatSelect.value;
                 if (format === 'buddhist') {
                     return `พ.ศ. ${year}`;
-                } else {
+                } else if (format === 'christian') {
                     return `ค.ศ. ${year - 543}`;
+                } else if (format === 'rattanakosin') {
+                    const rattanakosinYear = year - 2324;
+                    if (rattanakosinYear < 0) {
+                        return `ก่อน ร.ศ. ${Math.abs(rattanakosinYear)}`;
+                    } else {
+                        return `ร.ศ. ${rattanakosinYear}`;
+                    }
                 }
             }
 
@@ -590,4 +598,3 @@ pg_close($conn);
 </body>
 
 </html>
-
