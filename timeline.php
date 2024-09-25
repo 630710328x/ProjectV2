@@ -453,6 +453,7 @@ pg_close($conn);
                     rowDiv.appendChild(kingdomLabel);
 
                     const items = filteredData.filter(item => item.kingdomname === kingdom);
+                    let stagger = 0;
 
                     items.forEach(item => {
                         const startLeft = getPositionLeft(item.reignstart, minYearSelected);
@@ -460,8 +461,9 @@ pg_close($conn);
                         const itemDiv = document.createElement('div');
                         itemDiv.classList.add('timeline-item');
                         itemDiv.style.left = `${startLeft}px`;
-                        itemDiv.style.width = `${Math.max(endLeft - startLeft, 80)}px`; // Use width based on the year range
-                        itemDiv.style.top = `${0}px`; // Y position of the item
+                        itemDiv.style.width = `${Math.max(endLeft - startLeft, 80)}px`;
+                        itemDiv.style.top = `${stagger * 25}px`;  // เพิ่มการปรับตำแหน่งแนวตั้ง
+                        stagger = (stagger + 1) % 2;  // สลับบรรทัด
 
                         itemDiv.style.backgroundColor = getColorForKingdom(item.kingdomname);
 
@@ -469,6 +471,18 @@ pg_close($conn);
                             <h3>${item.name}</h3>
                             <p>${formatYear(item.reignstart)} - ${formatYear(item.reignend)}</p>
                         `;
+
+                        itemDiv.addEventListener('mouseover', () => {
+                            itemDiv.style.transform = 'scale(1.05)';
+                            itemDiv.style.zIndex = '10';
+                            itemDiv.style.backgroundColor = '#e2e6ea';
+                        });
+
+                        itemDiv.addEventListener('mouseout', () => {
+                            itemDiv.style.transform = 'scale(1)';
+                            itemDiv.style.zIndex = '1';
+                            itemDiv.style.backgroundColor = getColorForKingdom(item.kingdomname);
+                        });
 
                         itemDiv.addEventListener('click', () => {
                             const searchName = encodeURIComponent(item.name);
@@ -489,7 +503,7 @@ pg_close($conn);
                 const existingLines = document.querySelectorAll('.vertical-line');
                 existingLines.forEach(line => line.remove());
 
-                const yearInterval = 100; // Adjust the year interval as needed
+                const yearInterval = 100; // ระยะห่างระหว่างเส้นปี
 
                 for (let year = minYear; year <= maxYear; year += yearInterval) {
                     const positionLeft = getPositionLeft(year, minYear);
@@ -517,7 +531,7 @@ pg_close($conn);
                 const yearContainer = document.createElement('div');
                 yearContainer.classList.add('year-labels');
 
-                const yearInterval = 100; // Adjust the year interval as needed
+                const yearInterval = 100; // ระยะห่างระหว่างปี
 
                 for (let year = minYear; year <= maxYear; year += yearInterval) {
                     const positionLeft = getPositionLeft(year, minYear);
@@ -538,8 +552,8 @@ pg_close($conn);
             }
 
             function getPositionLeft(year, minYear) {
-                const offsetFromKingdomLabel = 200; // Distance from the kingdom label
-                const yearWidth = 180 * zoomLevel;  // Width per year
+                const offsetFromKingdomLabel = 200; // ระยะห่างจากป้ายชื่ออาณาจักร
+                const yearWidth = 180 * zoomLevel;  // ความกว้างต่อปี
                 return (year - minYear) * yearWidth + offsetFromKingdomLabel;
             }
 
