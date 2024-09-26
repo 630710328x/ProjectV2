@@ -75,12 +75,28 @@
             fill: #ADD8E6;
         }
 
+        .filter rect,
+        .filter image,
+        .filter text,
+        .filter use {
+            filter: blur(10px);
+        }
+
         #searchInput {
             margin: 10px;
             padding: 8px;
             width: 200px;
             border: 1px solid #ccc;
             border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: box-shadow 0.3s ease, border-color 0.3s ease;
+            position: relative;
+        }
+
+        #searchInput:focus {
+            border-color: #007bff;
+            box-shadow: 0 4px 8px rgba(0, 123, 255, 0.2);
+            outline: none;
         }
 
         #resetSearch {
@@ -91,16 +107,48 @@
             border: none;
             border-radius: 4px;
             cursor: pointer;
-            transition: background-color 0.3s ease;
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
         #resetSearch:hover {
             background-color: #0056b3;
+            box-shadow: 0 4px 8px rgba(0, 123, 255, 0.2);
         }
 
-        .filter rect, .filter image, .filter text, .filter use {
-  filter: blur(10px);
-}
+        #autoCompleteContainer {
+            border: 1px solid #ccc;
+            max-height: 150px;
+            overflow-y: auto;
+            background-color: #ffffff;
+            position: absolute;
+            z-index: 1000;
+            width: 200px;
+            border-radius: 4px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin-top: 5px;
+            transform: translateX(17px);
+        }
+
+        .suggestion-item {
+            padding: 10px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+            transition: background-color 0.2s ease;
+        }
+
+        .suggestion-item:last-child {
+            border-bottom: none;
+        }
+
+        .suggestion-item:hover {
+            background-color: #f8f9fa;
+        }
+
+        .autocomplete-wrapper {
+            position: relative;
+            display: inline-block;
+        }
     </style>
 </head>
 
@@ -132,8 +180,11 @@
             <option value="kamenravak">สมัยละแวก</option>
             <option value="ratanakosin">กรุงรัตนโกสินทร์</option>
         </select>
-        <input type="text" id="searchInput" placeholder="ค้นหาชื่อ..." autocomplete="off" />
 
+        <div class="autocomplete-wrapper">
+            <input type="text" id="searchInput" placeholder="ค้นหาชื่อ..." autocomplete="off" />
+            <div id="autoCompleteContainer" aria-live="polite" role="listbox"></div>
+        </div>
         <button id="resetSearch">รีเซ็ต</button>
     </div>
     <div id="loading" style="display:none;">Loading...</div>
@@ -145,6 +196,7 @@
             const tableSelect = document.getElementById('tableSelect');
             const searchInput = document.getElementById('searchInput');
             const resetButton = document.getElementById('resetSearch');
+            const autoCompleteContainer = document.getElementById('autoCompleteContainer');
             const treeContainer = document.getElementById('tree');
             const errorContainer = document.getElementById('error');
             const loadingIndicator = document.getElementById('loading');
@@ -242,6 +294,83 @@
                             }
                         });
 
+                        chart.filterUI.on('add-filter', function (sender, args) {
+                            var names = Object.keys(sender.filterBy);
+                            var index = names.indexOf(args.name);
+                            if (index == names.length - 1) {
+                                args.html += `<div data-btn-reset style="color: #039BE5;">reset</div>`;
+                            }
+                        });
+
+                        chart.filterUI.on('add-item', function (sender, args) {
+                            var count = 0;
+                            var totalCount = 0;
+                            for (var i = 0; i < sender.instance.config.nodes.length; i++) {
+                                var data = sender.instance.config.nodes[i];
+                                if (data[args.name] != undefined) {
+                                    totalCount++;
+
+                                    if (data[args.name] == args.value) {
+                                        count++;
+                                    }
+                                }
+                            }
+
+                            var dataAllAttr = '';
+                            if (args.text == '[All]') {
+                                count = totalCount;
+                                dataAllAttr = 'data-all';
+                            }
+                            args.html = `<div class="filter-item">
+                    <input ${dataAllAttr} type="checkbox" id="${args.value}" name="${args.value}" ${args.checked ? 'checked' : ''}>
+                    <label for="${args.value}">${args.text} (${count})</label>
+                </div>`;
+                        });
+                        chart.filterUI.on('update', function (sender, args) {
+                            var btnResetElement = sender.element.querySelector('[data-btn-reset]');
+                            btnResetElement.addEventListener('click', function (e) {
+                                sender.filterBy = null;
+                                sender.update();
+                                sender.instance.draw();
+                            });
+                        });
+
+                        chart.filterUI.on('show-items', function (sender, args) {
+                            var filterItemElements = sender.element.querySelectorAll('.filter-item');
+                            for (var i = 0; i < filterItemElements.length; i++) {
+                                filterItemElements[i].addEventListener('mouseenter', function (e) {
+                                    var val = e.target.querySelector('input').id;
+                                    if (val != args.name) {//[All]
+                                        for (var j = 0; j < sender.instance.config.nodes.length; j++) {
+                                            var data = sender.instance.config.nodes[j];
+                                            if (data[args.name] == val) {
+                                                var nodeElement = sender.instance.getNodeElement(data.id);
+                                                nodeElement.classList.add('filter-item-hovered');
+                                            }
+                                        }
+                                    }
+                                });
+
+                                filterItemElements[i].addEventListener('mouseleave', function (e) {
+                                    var val = e.target.querySelector('input').id;
+                                    if (val != args.name) {//[All]
+                                        for (var j = 0; j < sender.instance.config.nodes.length; j++) {
+                                            var data = sender.instance.config.nodes[j];
+                                            if (data[args.name] == val) {
+                                                var nodeElement = sender.instance.getNodeElement(data.id);
+                                                nodeElement.classList.remove('filter-item-hovered');
+                                            }
+                                        }
+                                    }
+                                });
+                            }
+                        });
+
+
+                        chart.onInit(function (args) {
+                            this.filterUI.show('title');
+                        });
+
                         errorContainer.style.display = 'none';
                     })
                     .catch(error => {
@@ -268,21 +397,39 @@
 
             const handleSearch = debounce(function () {
                 const searchTerm = searchInput.value.toLowerCase();
-                if (chart) {
-                    let filteredNodes = allNodes.filter(node => {
-                        return node.ชื่อ.toLowerCase().includes(searchTerm);
+                autoCompleteContainer.innerHTML = '';
+
+                if (searchTerm) {
+                    // กรองชื่อที่ตรงกับสิ่งที่พิมพ์
+                    const suggestions = allNodes
+                        .filter(node => node.ชื่อ.toLowerCase().includes(searchTerm))
+                        .slice(0, 5); // จำกัดคำแนะนำให้แสดงสูงสุด 5 รายการ
+
+                    // แสดงผลคำแนะนำ
+                    suggestions.forEach(node => {
+                        const suggestionItem = document.createElement('div');
+                        suggestionItem.textContent = node.ชื่อ;
+                        suggestionItem.classList.add('suggestion-item');
+                        suggestionItem.addEventListener('click', function () {
+                            searchInput.value = node.ชื่อ; // ตั้งค่าชื่อที่เลือกในกล่องค้นหา
+                            autoCompleteContainer.innerHTML = ''; // ลบคำแนะนำหลังจากเลือก
+                            chart.load([node, ...findDescendants(node.id, allNodes)]); // โหลดโหนดที่ตรงกับลูกหลาน
+                        });
+                        autoCompleteContainer.appendChild(suggestionItem);
                     });
 
-                    let finalNodes = new Set(filteredNodes);
-
-                    filteredNodes.forEach(node => {
-                        const descendants = findDescendants(node.id, allNodes);
-                        descendants.forEach(descendant => finalNodes.add(descendant));
-                    });
-
-                    chart.load([...finalNodes]);
+                    // ค้นหาชื่อที่ตรงกับคำค้นหาและแสดงโหนดที่ตรงกับลูกหลาน
+                    const matchedNode = allNodes.find(node => node.ชื่อ.toLowerCase() === searchTerm);
+                    if (matchedNode) {
+                        const descendants = findDescendants(matchedNode.id, allNodes);
+                        const nodesToLoad = [matchedNode, ...descendants];
+                        chart.load(nodesToLoad);
+                        autoCompleteContainer.innerHTML = ''; // ลบคำแนะนำเมื่อแสดงผลโหนดที่ตรงแล้ว
+                    }
+                } else {
+                    chart.load(allNodes); // โหลดโหนดทั้งหมดหากไม่มีการค้นหา
                 }
-            }, 300);
+            }, 150);  // Reduced debounce time for faster response
 
             const findDescendants = (nodeId, nodes) => {
                 let descendants = [];
@@ -299,7 +446,8 @@
 
             resetButton.addEventListener('click', function () {
                 searchInput.value = '';
-                handleSearch();
+                autoCompleteContainer.innerHTML = '';
+                chart.load(allNodes); // โหลดโหนดทั้งหมดเมื่อรีเซ็ตการค้นหา
                 setTimeout(function () {
                     alert('ค้นหาได้ถูกรีเซ็ตแล้ว');
                 }, 300);
@@ -344,6 +492,7 @@
 
             tableSelect.addEventListener('change', function () {
                 searchInput.value = '';  // Clear search input immediately on kingdom change
+                autoCompleteContainer.innerHTML = '';
                 const newUrl = window.location.href.split('?')[0]; // Remove query parameters
                 window.history.replaceState({}, document.title, newUrl); // Replace URL without reloading
                 isTableChanged = true;

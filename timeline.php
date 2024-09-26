@@ -61,8 +61,6 @@ pg_close($conn);
             padding: 0;
             background-color: #f0f2f5;
             color: #333;
-            font-size: 14px;
-            line-height: 1.6;
         }
 
         header {
@@ -103,6 +101,7 @@ pg_close($conn);
         nav ul li a.active {
             background-color: #0056b3;
         }
+
 
         .container {
             max-width: 1200px;
