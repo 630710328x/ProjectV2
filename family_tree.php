@@ -251,6 +251,8 @@
                             มารดา: member.mother !== null ? member.mother : "ไม่ปรากฏ",
                             img: member.img,
                             tags: member.tags,
+                            latitude: member.latitude,
+                            longitude: member.longitude,
                             เพศ: member.gender === 'Female' ? 'หญิง' : 'ชาย',
                             ppid: member.ppid
                         }));
@@ -399,7 +401,12 @@
                 autoCompleteContainer.innerHTML = '';
 
                 if (searchTerm) {
-                    let matchedNode = allNodes.find(node => node.ชื่อ.toLowerCase() === searchTerm);
+                    // Filter nodes with non-null latitude and longitude
+                    let matchedNode = allNodes.find(node =>
+                        node.latitude !== null &&
+                        node.longitude !== null &&
+                        node.ชื่อ.toLowerCase() === searchTerm
+                    );
                     let searchNode = matchedNode; // กำหนด searchNode เพื่อใช้ในการค้นหา
 
                     if (matchedNode && matchedNode.tags && matchedNode.tags.includes('partner')) {
@@ -411,7 +418,11 @@
                     }
 
                     const suggestions = allNodes
-                        .filter(node => node.ชื่อ.toLowerCase().includes(searchTerm))
+                        .filter(node =>
+                            node.latitude !== null &&
+                            node.longitude !== null &&
+                            node.ชื่อ.toLowerCase().includes(searchTerm)
+                        )
                         .slice(0, 5);
 
                     suggestions.forEach(node => {
@@ -429,8 +440,15 @@
                     });
 
                     if (searchNode) {
+                        // Find descendants without latitude and longitude filtering
                         const descendants = findDescendants(searchNode.id, allNodes);
-                        const nodesToLoad = [searchNode, ...descendants];
+
+                        // Find partners of children and grandchildren
+                        const partners = descendants.flatMap(descendant =>
+                            allNodes.filter(node => node.pid === descendant.id && node.tags && node.tags.includes('partner'))
+                        );
+
+                        const nodesToLoad = [searchNode, ...descendants, ...partners];
                         chart.load([...new Set(nodesToLoad)]);
                         autoCompleteContainer.innerHTML = '';
                     }
@@ -449,6 +467,7 @@
                 });
                 return descendants;
             };
+
 
             searchInput.addEventListener('input', handleSearch);
 
