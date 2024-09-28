@@ -419,10 +419,11 @@
                         suggestionItem.textContent = node.ชื่อ;
                         suggestionItem.classList.add('suggestion-item');
                         suggestionItem.addEventListener('click', function () {
-                            searchInput.value = node.ชื่อ;
-                            autoCompleteContainer.innerHTML = '';
-                            const nodesToLoad = [node, ...findDescendants(node.id, allNodes)];
-                            chart.load([...new Set(nodesToLoad)]);
+                            searchInput.value = node.ชื่อ; // แสดงชื่อในช่องค้นหา
+                            autoCompleteContainer.innerHTML = ''; // ล้างรายการแนะนำ
+
+                            // เรียกใช้ handleSearch เพื่อให้ทำงานเหมือนการพิมพ์เอง
+                            handleSearch();
                         });
                         autoCompleteContainer.appendChild(suggestionItem);
                     });
