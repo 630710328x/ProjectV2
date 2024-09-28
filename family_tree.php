@@ -287,18 +287,17 @@
                                 template: "ana",
                                 enableSearch: false,
                             });
+                            chart.filterUI.on('add-filter', function (sender, args) {
+                                var names = Object.keys(sender.filterBy);
+                                var index = names.indexOf(args.name);
+                                if (index == names.length - 1) {
+                                    args.html += `<div data-btn-reset style="color: #039BE5;">reset</div>`;
+                                }
+                            });
                         }
                         chart.on('render-link', function (sender, args) {
                             if (args.cnode.ppid != undefined) {
                                 args.html += '<use xlink:href="#heart" x="' + args.p.xa + '" y="' + args.p.ya + '"/>';
-                            }
-                        });
-
-                        chart.filterUI.on('add-filter', function (sender, args) {
-                            var names = Object.keys(sender.filterBy);
-                            var index = names.indexOf(args.name);
-                            if (index == names.length - 1) {
-                                args.html += `<div data-btn-reset style="color: #039BE5;">reset</div>`;
                             }
                         });
 
@@ -400,36 +399,44 @@
                 autoCompleteContainer.innerHTML = '';
 
                 if (searchTerm) {
-                    // กรองชื่อที่ตรงกับสิ่งที่พิมพ์
+                    let matchedNode = allNodes.find(node => node.ชื่อ.toLowerCase() === searchTerm);
+                    let searchNode = matchedNode; // กำหนด searchNode เพื่อใช้ในการค้นหา
+
+                    if (matchedNode && matchedNode.tags && matchedNode.tags.includes('partner')) {
+                        const partnerNode = allNodes.find(node => node.id === matchedNode.pid);
+                        if (partnerNode) {
+                            searchInput.value = matchedNode.ชื่อ; // แสดงชื่อของ partner ในช่องค้นหา
+                            searchNode = partnerNode; // ใช้ partnerNode ในการค้นหา
+                        }
+                    }
+
                     const suggestions = allNodes
                         .filter(node => node.ชื่อ.toLowerCase().includes(searchTerm))
-                        .slice(0, 5); // จำกัดคำแนะนำให้แสดงสูงสุด 5 รายการ
+                        .slice(0, 5);
 
-                    // แสดงผลคำแนะนำ
                     suggestions.forEach(node => {
                         const suggestionItem = document.createElement('div');
                         suggestionItem.textContent = node.ชื่อ;
                         suggestionItem.classList.add('suggestion-item');
                         suggestionItem.addEventListener('click', function () {
-                            searchInput.value = node.ชื่อ; // ตั้งค่าชื่อที่เลือกในกล่องค้นหา
-                            autoCompleteContainer.innerHTML = ''; // ลบคำแนะนำหลังจากเลือก
-                            chart.load([node, ...findDescendants(node.id, allNodes)]); // โหลดโหนดที่ตรงกับลูกหลาน
+                            searchInput.value = node.ชื่อ;
+                            autoCompleteContainer.innerHTML = '';
+                            const nodesToLoad = [node, ...findDescendants(node.id, allNodes)];
+                            chart.load([...new Set(nodesToLoad)]);
                         });
                         autoCompleteContainer.appendChild(suggestionItem);
                     });
 
-                    // ค้นหาชื่อที่ตรงกับคำค้นหาและแสดงโหนดที่ตรงกับลูกหลาน
-                    const matchedNode = allNodes.find(node => node.ชื่อ.toLowerCase() === searchTerm);
-                    if (matchedNode) {
-                        const descendants = findDescendants(matchedNode.id, allNodes);
-                        const nodesToLoad = [matchedNode, ...descendants];
-                        chart.load(nodesToLoad);
-                        autoCompleteContainer.innerHTML = ''; // ลบคำแนะนำเมื่อแสดงผลโหนดที่ตรงแล้ว
+                    if (searchNode) {
+                        const descendants = findDescendants(searchNode.id, allNodes);
+                        const nodesToLoad = [searchNode, ...descendants];
+                        chart.load([...new Set(nodesToLoad)]);
+                        autoCompleteContainer.innerHTML = '';
                     }
                 } else {
-                    chart.load(allNodes); // โหลดโหนดทั้งหมดหากไม่มีการค้นหา
+                    chart.load(allNodes);
                 }
-            }, 150);  // Reduced debounce time for faster response
+            }, 150);
 
             const findDescendants = (nodeId, nodes) => {
                 let descendants = [];

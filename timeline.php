@@ -194,6 +194,7 @@ pg_close($conn);
             position: absolute;
             z-index: 1;
             margin-bottom: 15px;
+            cursor: pointer;
         }
 
         .timeline-item:hover {
