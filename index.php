@@ -429,6 +429,11 @@ try {
 
             // Add form validation before submission
             document.getElementById('searchForm').addEventListener('submit', function (event) {
+                // ตรวจสอบว่าถ้าเป็นการกดปุ่มรีเซ็ต ไม่ต้องตรวจสอบข้อมูลฟิลด์
+                if (document.activeElement && document.activeElement.id === 'resetButton') {
+                    return; // ออกจากฟังก์ชันโดยไม่ตรวจสอบข้อมูลใด ๆ
+                }
+
                 var year = document.getElementById('year').value;
                 var name = document.getElementById('name').value;
                 var relationship = document.getElementById('relationship').value;
@@ -461,6 +466,7 @@ try {
                     return;
                 }
             });
+
 
             var map = L.map('map', {
                 scrollWheelZoom: false,
