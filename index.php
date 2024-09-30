@@ -288,7 +288,7 @@ try {
 
     <div id="map">
         <div class="form-container">
-            <form method="POST" action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>">
+            <form method="POST" action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>" id="searchForm">
                 <fieldset>
                     <legend>Select Kingdoms:</legend>
                     <label><input type="checkbox" id="selectAll">เลือกทั้งหมด</label><br>
@@ -427,6 +427,41 @@ try {
                 toggleBeforeAPOption(); // Reset the beforeAP option display
             });
 
+            // Add form validation before submission
+            document.getElementById('searchForm').addEventListener('submit', function (event) {
+                var year = document.getElementById('year').value;
+                var name = document.getElementById('name').value;
+                var relationship = document.getElementById('relationship').value;
+                var searchType = document.getElementById('searchType').value;
+
+                // ตรวจสอบว่ามี checkbox kingdom ถูกเลือกหรือไม่
+                var kingdomCheckboxes = document.querySelectorAll('input[name="kingdoms[]"]:checked');
+                if (kingdomCheckboxes.length === 0) {
+                    alert('กรุณาเลือกอาณาจักรอย่างน้อยหนึ่งอาณาจักร');
+                    event.preventDefault(); // ยกเลิกการส่งฟอร์ม
+                    return;
+                }
+
+                // ตรวจสอบการกรอกข้อมูลตามประเภทการค้นหา
+                if (searchType === 'year' && !year) {
+                    alert('กรุณาใส่ปีศักราช');
+                    event.preventDefault(); // ยกเลิกการส่งฟอร์ม
+                    return;
+                }
+
+                if (searchType === 'name' && !name.trim()) {
+                    alert('กรุณาใส่ชื่อ');
+                    event.preventDefault(); // ยกเลิกการส่งฟอร์ม
+                    return;
+                }
+
+                if (searchType === 'relationship' && !relationship.trim()) {
+                    alert('กรุณาใส่รัชกาล');
+                    event.preventDefault(); // ยกเลิกการส่งฟอร์ม
+                    return;
+                }
+            });
+
             var map = L.map('map', {
                 scrollWheelZoom: false,
                 doubleClickZoom: false,
@@ -439,6 +474,18 @@ try {
             L.tileLayer('https://api.maptiler.com/maps/streets-v2/{z}/{x}/{y}.png?key=Qy0caTTPn0K7S8WaoZ1d', {
                 attribution: '<a href="https://www.maptiler.com/copyright/" target="_blank">&copy; MapTiler</a> <a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>'
             }).addTo(map);
+
+            var formContainer = document.querySelector('.form-container');
+
+            // Disable map dragging when mouse is over the form container
+            formContainer.addEventListener('mouseenter', function () {
+                map.dragging.disable();
+            });
+
+            // Enable map dragging when mouse leaves the form container
+            formContainer.addEventListener('mouseleave', function () {
+                map.dragging.enable();
+            });
 
             var locations = <?php echo $locationsJson; ?>;
 
