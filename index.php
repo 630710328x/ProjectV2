@@ -536,8 +536,8 @@ try {
                                 <p>พระองค์ก่อนหน้า : ${location.before ? location.before : 'ไม่ปรากฏ'}</p>
                                 <p>พระองค์ถัดไป : ${location.after ? location.after : 'ไม่ปรากฏ'}</p>
                                 <p>ปกครอง : ${reignStartBE} - ${reignEndBE}</p>
-                                <p>ปกครอง : ${reignStartAP} - ${reignEndAP}</p>
                                 <p>ปกครอง : ${reignStartCE} - ${reignEndCE}</p>
+                                <p>ปกครอง : ${reignStartAP} - ${reignEndAP}</p>
                                 <button onclick="goToFamilyTree('${location.kingdomname}', '${location.name}')">ไปยัง Family Tree</button>
                             </div>
                             `
