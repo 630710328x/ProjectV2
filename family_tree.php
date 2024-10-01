@@ -301,6 +301,22 @@
                             if (args.cnode.ppid != undefined) {
                                 args.html += '<use xlink:href="#heart" x="' + args.p.xa + '" y="' + args.p.ya + '"/>';
                             }
+                            // ตรวจสอบว่า cnode มีแท็ก partner
+                            if (args.cnode.tags && args.cnode.tags.includes('partner')) {
+                                var hasMatchingChild = false;
+
+                                // วนลูปตรวจสอบว่า node ลูกๆ มีค่า ppid ตรงกับ id ของ cnode หรือไม่
+                                chart.config.nodes.forEach(function (node) {
+                                    if (node.ppid == args.cnode.id) {
+                                        hasMatchingChild = true;  // ถ้ามี node ลูกที่มีค่า ppid ตรงกับ id ของ cnode
+                                    }
+                                });
+
+                                // ถ้าไม่มี node ลูกที่มีค่า ppid ตรงกับ id ของ cnode จึงจะแสดงหัวใจ
+                                if (!hasMatchingChild) {
+                                    args.html += '<use xlink:href="#heart" x="' + args.p.xa + '" y="' + args.p.ya + '"/>';
+                                }
+                            }
                         });
 
                         chart.filterUI.on('add-item', function (sender, args) {
@@ -427,8 +443,23 @@
 
                     suggestions.forEach(node => {
                         const suggestionItem = document.createElement('div');
-                        suggestionItem.textContent = node.ชื่อ;
                         suggestionItem.classList.add('suggestion-item');
+
+                        // เพิ่มการแสดงรูปภาพของแต่ละบุคคล
+                        const img = document.createElement('img');
+                        img.src = node.img ? node.img : 'default_image.jpg'; // ใช้รูป default ถ้าไม่มีรูป
+                        img.alt = node.ชื่อ;
+                        img.style.width = '30px'; // กำหนดขนาดรูปภาพ
+                        img.style.height = '30px';
+                        img.style.borderRadius = '50%'; // รูปทรงวงกลม
+                        img.style.marginRight = '10px';
+
+                        const nameSpan = document.createElement('span');
+                        nameSpan.textContent = node.ชื่อ;
+
+                        suggestionItem.appendChild(img); // เพิ่มรูปไปยัง suggestion item
+                        suggestionItem.appendChild(nameSpan); // เพิ่มชื่อไปยัง suggestion item
+
                         suggestionItem.addEventListener('click', function () {
                             searchInput.value = node.ชื่อ; // แสดงชื่อในช่องค้นหา
                             autoCompleteContainer.innerHTML = ''; // ล้างรายการแนะนำ
@@ -436,6 +467,7 @@
                             // เรียกใช้ handleSearch เพื่อให้ทำงานเหมือนการพิมพ์เอง
                             handleSearch();
                         });
+
                         autoCompleteContainer.appendChild(suggestionItem);
                     });
 
@@ -456,6 +488,7 @@
                     chart.load(allNodes);
                 }
             }, 150);
+
 
             const findDescendants = (nodeId, nodes) => {
                 let descendants = [];
