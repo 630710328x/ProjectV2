@@ -494,9 +494,13 @@ pg_close($conn);
                             itemDiv.style.width = `${Math.max(endLeft - startLeft, 80)}px`; // กลับไปที่ขนาดเดิม
                         });
 
+                        itemDiv.addEventListener('click', () => {
+                            const searchName = encodeURIComponent(item.name);
+                            window.location.href = `family_tree.php?id=${item.id}&table=${item.kingdomname}&search=${searchName}`;
+                        });
+
                         rowDiv.appendChild(itemDiv);
                     });
-
 
                     timelineItems.appendChild(rowDiv);
                 });
