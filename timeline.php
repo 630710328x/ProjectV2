@@ -198,11 +198,17 @@ pg_close($conn);
         }
 
         .timeline-item:hover {
-            transform: translateY(-3px) scale(1.02);
+            transform: translateY(-3px);
             background-color: #e2e6ea;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
             z-index: 10;
-            transition: transform 0.3s ease, background-color 0.3s ease;
+            max-width: none;
+            /* ยกเลิกข้อจำกัดของขนาด */
+            white-space: normal;
+            /* ทำให้บรรทัดใหม่เกิดขึ้นถ้ามีข้อมูลยาว */
+            padding: 12px;
+            width: auto;
+            /* ทำให้ขนาดของ item ขยายตามเนื้อหาข้างใน */
         }
 
         .timeline-item h3 {
@@ -468,29 +474,29 @@ pg_close($conn);
                         itemDiv.style.backgroundColor = getColorForKingdom(item.kingdomname);
 
                         itemDiv.innerHTML = `
-                            <h3>${item.name}</h3>
-                            <p>${formatYear(item.reignstart)} - ${formatYear(item.reignend)}</p>
-                        `;
+        <h3>${item.name}</h3>
+        <p>${formatYear(item.reignstart)} - ${formatYear(item.reignend)}</p>
+    `;
 
                         itemDiv.addEventListener('mouseover', () => {
                             itemDiv.style.transform = 'scale(1.05)';
                             itemDiv.style.zIndex = '10';
                             itemDiv.style.backgroundColor = '#e2e6ea';
+                            itemDiv.style.whiteSpace = 'normal'; // ขยายขนาดให้แสดงข้อมูลทั้งหมด
+                            itemDiv.style.width = 'auto'; // ขยายขนาดตามเนื้อหาที่ต้องแสดง
                         });
 
                         itemDiv.addEventListener('mouseout', () => {
                             itemDiv.style.transform = 'scale(1)';
                             itemDiv.style.zIndex = '1';
                             itemDiv.style.backgroundColor = getColorForKingdom(item.kingdomname);
-                        });
-
-                        itemDiv.addEventListener('click', () => {
-                            const searchName = encodeURIComponent(item.name);
-                            window.location.href = `family_tree.php?id=${item.id}&table=${item.kingdomname}&search=${searchName}`;
+                            itemDiv.style.whiteSpace = 'nowrap'; // กลับมาเป็นแบบบรรทัดเดียว
+                            itemDiv.style.width = `${Math.max(endLeft - startLeft, 80)}px`; // กลับไปที่ขนาดเดิม
                         });
 
                         rowDiv.appendChild(itemDiv);
                     });
+
 
                     timelineItems.appendChild(rowDiv);
                 });
