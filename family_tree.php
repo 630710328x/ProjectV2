@@ -67,14 +67,6 @@
             margin-right: 10px;
         }
 
-        .node.female rect {
-            fill: #fdb0c0;
-        }
-
-        .node.male rect {
-            fill: #ADD8E6;
-        }
-
         .filter rect,
         .filter image,
         .filter text,
@@ -211,6 +203,13 @@
                 '<text data-width="230" data-text-overflow="ellipsis" style="font-size: 20px;" fill="#000000" x="125" y="100" text-anchor="middle">{val}</text>';
             OrgChart.templates.ana.field_1 =
                 '<text data-width="130" data-text-overflow="ellipsis" style="font-size: 16px;" fill="#000000" x="230" y="30" text-anchor="end">{val}</text>';
+            // กำหนด template สำหรับโหนดเพศชาย
+            OrgChart.templates.male = Object.assign({}, OrgChart.templates.ana);
+            OrgChart.templates.male.node = '<rect x="0" y="0" height="110" width="250" fill="#87CEFA" stroke-width="1" stroke="#aeaeae"></rect>';
+
+            // กำหนด template สำหรับโหนดเพศหญิง
+            OrgChart.templates.female = Object.assign({}, OrgChart.templates.ana);
+            OrgChart.templates.female.node = '<rect x="0" y="0" height="110" width="250" fill="#FFB6C1" stroke-width="1" stroke="#aeaeae"></rect>';
 
             const fetchFamilyData = (table) => {
                 return fetch(`fetch_family_data.php?table=${table}`)
@@ -255,7 +254,7 @@
                             longitude: member.longitude,
                             เพศ: member.gender === 'Female' ? 'หญิง' : 'ชาย',
                             ppid: member.ppid,
-                            img: member.img
+                            img: member.img ? member.img : 'https://www.pinclipart.com/picdir/big/165-1655940_account-human-person-user-icon-username-png-icon.png'
                         }));
 
                         if (chart) {
@@ -287,9 +286,20 @@
                                     field_1: "ตำแหน่ง",
                                     img_0: "img",
                                 },
+                                tags: {
+                                    male: {
+                                        template: "male"
+                                    },
+                                    female: {
+                                        template: "female"
+                                    }
+                                },
                                 template: "ana",
                                 enableSearch: false,
+
                             });
+
+
                             chart.filterUI.on('add-filter', function (sender, args) {
                                 var names = Object.keys(sender.filterBy);
                                 var index = names.indexOf(args.name);
@@ -424,13 +434,14 @@
                         node.longitude !== null &&
                         node.ชื่อ.toLowerCase() === searchTerm
                     );
-                    let searchNode = matchedNode; // กำหนด searchNode เพื่อใช้ในการค้นหา
+
+                    let searchNode = matchedNode; // Set searchNode for searching
 
                     if (matchedNode && matchedNode.tags && matchedNode.tags.includes('partner')) {
                         const partnerNode = allNodes.find(node => node.id === matchedNode.pid);
                         if (partnerNode) {
-                            searchInput.value = matchedNode.ชื่อ; // แสดงชื่อของ partner ในช่องค้นหา
-                            searchNode = partnerNode; // ใช้ partnerNode ในการค้นหา
+                            searchInput.value = matchedNode.ชื่อ; // Show partner's name in the search input
+                            searchNode = partnerNode; // Use partnerNode for searching
                         }
                     }
 
@@ -446,26 +457,26 @@
                         const suggestionItem = document.createElement('div');
                         suggestionItem.classList.add('suggestion-item');
 
-                        // เพิ่มการแสดงรูปภาพของแต่ละบุคคล
+                        // Adding image for each person
                         const img = document.createElement('img');
-                        img.src = node.img ? node.img : 'default_image.jpg'; // ใช้รูป default ถ้าไม่มีรูป
+                        img.src = node.img ? node.img : 'default_image.jpg'; // Use default image if none
                         img.alt = node.ชื่อ;
-                        img.style.width = '30px'; // กำหนดขนาดรูปภาพ
+                        img.style.width = '30px';
                         img.style.height = '30px';
-                        img.style.borderRadius = '50%'; // รูปทรงวงกลม
+                        img.style.borderRadius = '50%'; // Circle shape
                         img.style.marginRight = '10px';
 
                         const nameSpan = document.createElement('span');
                         nameSpan.textContent = node.ชื่อ;
 
-                        suggestionItem.appendChild(img); // เพิ่มรูปไปยัง suggestion item
-                        suggestionItem.appendChild(nameSpan); // เพิ่มชื่อไปยัง suggestion item
+                        suggestionItem.appendChild(img); // Add image to suggestion item
+                        suggestionItem.appendChild(nameSpan); // Add name to suggestion item
 
                         suggestionItem.addEventListener('click', function () {
-                            searchInput.value = node.ชื่อ; // แสดงชื่อในช่องค้นหา
-                            autoCompleteContainer.innerHTML = ''; // ล้างรายการแนะนำ
+                            searchInput.value = node.ชื่อ; // Show name in the search input
+                            autoCompleteContainer.innerHTML = ''; // Clear suggestions
 
-                            // เรียกใช้ handleSearch เพื่อให้ทำงานเหมือนการพิมพ์เอง
+                            // Call handleSearch to behave like typing
                             handleSearch();
                         });
 
@@ -483,12 +494,23 @@
 
                         const nodesToLoad = [searchNode, ...descendants, ...partners];
                         chart.load([...new Set(nodesToLoad)]);
+
+                        // Change color of the matched node
+                        const matchedNodeElement = chart.getNodeElement(searchNode.id);
+                        if (matchedNodeElement) {
+                            const rect = matchedNodeElement.querySelector('rect'); // Get the <rect> element
+                            if (rect) {
+                                rect.setAttribute('fill', '#FFD700'); // Change to gold color (or any color you prefer)
+                            }
+                        }
+
                         autoCompleteContainer.innerHTML = '';
                     }
                 } else {
-                    chart.load(allNodes);
+                    chart.load(allNodes); // Load all nodes if search term is empty
                 }
             }, 150);
+
 
 
             const findDescendants = (nodeId, nodes) => {
