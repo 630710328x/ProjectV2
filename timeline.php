@@ -23,6 +23,7 @@ $tables = [
     'sukothai',
     'lanna',
     'ayuttaya',
+    'cotraboon',
     'lanchang',
     'kamenravak',
     'ratanakosin'
@@ -372,6 +373,7 @@ pg_close($conn);
                 'sukothai': 'อาณาจักรสุโขทัย',
                 'lanna': 'อาณาจักรล้านนา',
                 'ayuttaya': 'อาณาจักรอยุธยา',
+                'cotraboon': 'อาณาจักรโคตรบูร',
                 'lanchang': 'อาณาจักรล้านช้าง',
                 'kamenravak': 'สมัยละแวก',
                 'ratanakosin': 'กรุงรัตนโกสินทร์'

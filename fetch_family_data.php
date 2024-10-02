@@ -43,7 +43,8 @@ $allowed_tables = [
     'lanna',
     'panakorn',
     'lavo',
-    'ayuttaya'
+    'ayuttaya',
+    'cotraboon'
 ];
 
 if (!in_array($table, $allowed_tables)) {

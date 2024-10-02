@@ -176,6 +176,7 @@
             <option value="sukothai">อาณาจักรสุโขทัย</option>
             <option value="lanna">อาณาจักรล้านนา</option>
             <option value="ayuttaya">อาณาจักรอยุธยา</option>
+            <option value="cotraboon">อาณาจักรโคตรบูร</option>
             <option value="lanchang">อาณาจักรล้านช้าง</option>
             <option value="kamenravak">สมัยละแวก</option>
             <option value="ratanakosin">กรุงรัตนโกสินทร์</option>
@@ -249,12 +250,12 @@
                             พระราชบุตร: member.child !== null ? member.child : "ไม่ปรากฏ",
                             บิดา: member.father !== null ? member.father : "ไม่ปรากฏ",
                             มารดา: member.mother !== null ? member.mother : "ไม่ปรากฏ",
-                            img: member.img,
                             tags: member.tags,
                             latitude: member.latitude,
                             longitude: member.longitude,
                             เพศ: member.gender === 'Female' ? 'หญิง' : 'ชาย',
-                            ppid: member.ppid
+                            ppid: member.ppid,
+                            img: member.img
                         }));
 
                         if (chart) {
