@@ -211,6 +211,10 @@
             OrgChart.templates.female = Object.assign({}, OrgChart.templates.ana);
             OrgChart.templates.female.node = '<rect x="0" y="0" height="110" width="250" fill="#FFB6C1" stroke-width="1" stroke="#aeaeae"></rect>';
 
+            // Define custom template for searched node
+            OrgChart.templates.searched = Object.assign({}, OrgChart.templates.ana);
+            OrgChart.templates.searched.node = '<rect x="0" y="0" height="110" width="250" fill="#FFD700" stroke-width="1" stroke="#aeaeae"></rect>';
+
             const fetchFamilyData = (table) => {
                 return fetch(`fetch_family_data.php?table=${table}`)
                     .then(response => {
@@ -292,11 +296,13 @@
                                     },
                                     female: {
                                         template: "female"
+                                    },
+                                    searched: {
+                                        template: "searched" // Custom template for searched nodes
                                     }
                                 },
                                 template: "ana",
                                 enableSearch: false,
-
                             });
 
 
@@ -492,18 +498,13 @@
                             allNodes.filter(node => node.pid === descendant.id && node.tags && node.tags.includes('partner'))
                         );
 
+                        // Add 'searched' tag to the matched node for custom highlighting
+                        searchNode.tags = ['searched'];
+
                         const nodesToLoad = [searchNode, ...descendants, ...partners];
                         chart.load([...new Set(nodesToLoad)]);
 
-                        // Change color of the matched node
-                        const matchedNodeElement = chart.getNodeElement(searchNode.id);
-                        if (matchedNodeElement) {
-                            const rect = matchedNodeElement.querySelector('rect'); // Get the <rect> element
-                            if (rect) {
-                                rect.setAttribute('fill', '#FFD700'); // Change to gold color (or any color you prefer)
-                            }
-                        }
-
+                        // No need to manually change color here as it's handled via the template
                         autoCompleteContainer.innerHTML = '';
                     }
                 } else {
@@ -530,11 +531,32 @@
             resetButton.addEventListener('click', function () {
                 searchInput.value = '';
                 autoCompleteContainer.innerHTML = '';
+
+                // คืนค่าสีของโหนดทั้งหมดตามเพศ และเก็บแท็ก partner ถ้ามี
+                allNodes.forEach(node => {
+                    let newTags = [];
+
+                    // เก็บแท็ก partner ไว้ถ้ามี
+                    if (node.tags && node.tags.includes('partner')) {
+                        newTags.push('partner');
+                    }
+
+                    // ตั้งค่าแท็กตามเพศ
+                    if (node.เพศ === 'ชาย') {
+                        newTags.push('male');
+                    } else if (node.เพศ === 'หญิง') {
+                        newTags.push('female');
+                    }
+
+                    node.tags = newTags; // ตั้งค่าแท็กใหม่
+                });
+
                 chart.load(allNodes); // โหลดโหนดทั้งหมดเมื่อรีเซ็ตการค้นหา
                 setTimeout(function () {
                     alert('ค้นหาได้ถูกรีเซ็ตแล้ว');
                 }, 300);
             });
+
 
             loadFamilyData(tableSelect.value).then(() => {
                 isTableChanged = false;
