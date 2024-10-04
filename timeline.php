@@ -379,7 +379,7 @@ pg_close($conn);
                 'ratanakosin': 'กรุงรัตนโกสินทร์'
             };
 
-            const zoomLevel = 1 / 60;
+            const zoomLevel = 1 / 20;
             let minYearSelected, maxYear;
 
             function renderCheckboxes() {

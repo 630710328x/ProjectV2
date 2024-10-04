@@ -54,11 +54,32 @@
             background-color: #0056b3;
         }
 
+        #controls {
+            margin: 10px;
+            padding: 10px;
+            border: 2px;
+            /* เพิ่มเส้นขอบสีน้ำเงิน */
+            border-radius: 8px;
+            /* เพิ่มความโค้งมนให้กับขอบ */
+            background-color: #ffffff;
+            /* สีพื้นหลัง */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            /* เพิ่มเงาให้กับ container */
+        }
+
         #tree {
             width: 100%;
             height: 85.5vh;
-            border: 0px solid #ccc;
+            border: 2px;
+            /* เพิ่มเส้นขอบสีเทา */
+            border-radius: 8px;
+            /* เพิ่มความโค้งมนให้กับขอบ */
+            background-color: #ffffff;
+            /* สีพื้นหลัง */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            /* เพิ่มเงาให้กับ container */
         }
+
 
         .orgchart .node img {
             width: 50px;
@@ -205,15 +226,15 @@
                 '<text data-width="130" data-text-overflow="ellipsis" style="font-size: 16px;" fill="#000000" x="230" y="30" text-anchor="end">{val}</text>';
             // กำหนด template สำหรับโหนดเพศชาย
             OrgChart.templates.male = Object.assign({}, OrgChart.templates.ana);
-            OrgChart.templates.male.node = '<rect x="0" y="0" height="110" width="250" fill="#87CEFA" stroke-width="1" stroke="#aeaeae"></rect>';
+            OrgChart.templates.male.node = '<rect x="0" y="0" height="110" width="250" fill="#87CEFA" stroke-width="1" stroke="#aeaeae" rx="15" ry="15"></rect>';
 
             // กำหนด template สำหรับโหนดเพศหญิง
             OrgChart.templates.female = Object.assign({}, OrgChart.templates.ana);
-            OrgChart.templates.female.node = '<rect x="0" y="0" height="110" width="250" fill="#FFB6C1" stroke-width="1" stroke="#aeaeae"></rect>';
+            OrgChart.templates.female.node = '<rect x="0" y="0" height="110" width="250" fill="#FFB6C1" stroke-width="1" stroke="#aeaeae" rx="15" ry="15"></rect>';
 
             // Define custom template for searched node
             OrgChart.templates.searched = Object.assign({}, OrgChart.templates.ana);
-            OrgChart.templates.searched.node = '<rect x="0" y="0" height="110" width="250" fill="#FFD700" stroke-width="1" stroke="#aeaeae"></rect>';
+            OrgChart.templates.searched.node = '<rect x="0" y="0" height="110" width="250" fill="#FFD700" stroke-width="1" stroke="#aeaeae" rx="15" ry="15"></rect>';
 
             const fetchFamilyData = (table) => {
                 return fetch(`fetch_family_data.php?table=${table}`)
@@ -258,7 +279,8 @@
                             longitude: member.longitude,
                             เพศ: member.gender === 'Female' ? 'หญิง' : 'ชาย',
                             ppid: member.ppid,
-                            img: member.img ? member.img : 'https://www.pinclipart.com/picdir/big/165-1655940_account-human-person-user-icon-username-png-icon.png'
+                            img: member.img ? member.img : 'https://www.pinclipart.com/picdir/big/165-1655940_account-human-person-user-icon-username-png-icon.png',
+                            วิกิพีเดีย: member.urlking
                         }));
 
                         if (chart) {
@@ -442,7 +464,7 @@
                     );
 
                     let searchNode = matchedNode; // Set searchNode for searching
-
+                    
                     if (matchedNode && matchedNode.tags && matchedNode.tags.includes('partner')) {
                         const partnerNode = allNodes.find(node => node.id === matchedNode.pid);
                         if (partnerNode) {
