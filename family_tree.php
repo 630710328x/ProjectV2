@@ -95,6 +95,16 @@
             filter: blur(10px);
         }
 
+        .boc-edit-form.female .boc-edit-form-header,
+        .boc-edit-form.female .boc-img-button {
+            background-color: #FFB6C1 !important;
+        }
+
+        .boc-edit-form.male .boc-edit-form-header,
+        .boc-edit-form.male .boc-img-button {
+            background-color: #87CEFA !important;
+        }
+
         [data-l-id] path {
             stroke: #000000;
         }
