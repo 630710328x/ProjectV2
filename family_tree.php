@@ -69,7 +69,7 @@
 
         #tree {
             width: 100%;
-            height: 85.5vh;
+            height: 80vh;
             border: 2px;
             /* เพิ่มเส้นขอบสีเทา */
             border-radius: 8px;
@@ -93,6 +93,14 @@
         .filter text,
         .filter use {
             filter: blur(10px);
+        }
+
+        [data-l-id] path {
+            stroke: #000000;
+        }
+
+        [data-n-id] rect:hover {
+            filter: drop-shadow(4px 5px 5px #aeaeae);
         }
 
         #searchInput {
@@ -162,6 +170,30 @@
             position: relative;
             display: inline-block;
         }
+
+        #tableSelect {
+            padding: 8px 12px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background-color: #ffffff;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-image: url('data:image/svg+xml;charset=US-ASCII,<svg%20xmlns="http://www.w3.org/2000/svg"%20viewBox="0%200%2024%2024"%20fill="none"%20stroke="%23007bff"%20stroke-width="2"%20stroke-linecap="round"%20stroke-linejoin="round"%20class="feather%20feather-chevron-down"><polyline%20points="6%209%2012%2015%2018%209"></polyline></svg>');
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 16px;
+            width: 180px;
+        }
+
+        #tableSelect:focus {
+            border-color: #007bff;
+            box-shadow: 0 4px 8px rgba(0, 123, 255, 0.2);
+            outline: none;
+        }
     </style>
 </head>
 
@@ -226,15 +258,15 @@
                 '<text data-width="130" data-text-overflow="ellipsis" style="font-size: 16px;" fill="#000000" x="230" y="30" text-anchor="end">{val}</text>';
             // กำหนด template สำหรับโหนดเพศชาย
             OrgChart.templates.male = Object.assign({}, OrgChart.templates.ana);
-            OrgChart.templates.male.node = '<rect x="0" y="0" height="110" width="250" fill="#87CEFA" stroke-width="1" stroke="#aeaeae" rx="15" ry="15"></rect>';
+            OrgChart.templates.male.node = '<rect x="0" y="0" height="110" width="250" fill="#87CEFA" stroke-width="2" stroke="#000000" rx="15" ry="15"></rect>';
 
             // กำหนด template สำหรับโหนดเพศหญิง
             OrgChart.templates.female = Object.assign({}, OrgChart.templates.ana);
-            OrgChart.templates.female.node = '<rect x="0" y="0" height="110" width="250" fill="#FFB6C1" stroke-width="1" stroke="#aeaeae" rx="15" ry="15"></rect>';
+            OrgChart.templates.female.node = '<rect x="0" y="0" height="110" width="250" fill="#FFB6C1" stroke-width="2" stroke="#000000" rx="15" ry="15"></rect>';
 
             // Define custom template for searched node
             OrgChart.templates.searched = Object.assign({}, OrgChart.templates.ana);
-            OrgChart.templates.searched.node = '<rect x="0" y="0" height="110" width="250" fill="#FFD700" stroke-width="1" stroke="#aeaeae" rx="15" ry="15"></rect>';
+            OrgChart.templates.searched.node = '<rect x="0" y="0" height="110" width="250" fill="#FFD700" stroke-width="2" stroke="#000000" rx="15" ry="15"></rect>';
 
             const fetchFamilyData = (table) => {
                 return fetch(`fetch_family_data.php?table=${table}`)
@@ -280,7 +312,7 @@
                             เพศ: member.gender === 'Female' ? 'หญิง' : 'ชาย',
                             ppid: member.ppid,
                             img: member.img ? member.img : 'https://www.pinclipart.com/picdir/big/165-1655940_account-human-person-user-icon-username-png-icon.png',
-                            วิกิพีเดีย: member.urlking
+                            วิกิพีเดีย: member.urlking !== null ? member.urlking : "ไม่ปรากฏ"
                         }));
 
                         if (chart) {
@@ -464,7 +496,7 @@
                     );
 
                     let searchNode = matchedNode; // Set searchNode for searching
-                    
+
                     if (matchedNode && matchedNode.tags && matchedNode.tags.includes('partner')) {
                         const partnerNode = allNodes.find(node => node.id === matchedNode.pid);
                         if (partnerNode) {
