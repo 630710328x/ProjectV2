@@ -105,6 +105,11 @@
             background-color: #87CEFA !important;
         }
 
+        .boc-edit-form.searched .boc-edit-form-header,
+        .boc-edit-form.searched .boc-img-button {
+            background-color: #FFD700 !important;
+        }
+
         [data-l-id] path {
             stroke: #000000;
         }
@@ -330,7 +335,7 @@
                         } else {
                             chart = new OrgChart(treeContainer, {
                                 nodes: allNodes,
-                                layout: OrgChart.tree,
+                                layout: OrgChart.normal,
                                 mouseScrool: OrgChart.none,
                                 align: OrgChart.ORIENTATION,
                                 keyNavigation: false,
@@ -344,7 +349,7 @@
                                     }
                                 },
                                 toolbar: {
-                                    layout: true,
+                                    layout: false,
                                     zoom: true,
                                     fit: true,
                                     expandAll: true
@@ -575,8 +580,6 @@
                     chart.load(allNodes); // Load all nodes if search term is empty
                 }
             }, 150);
-
-
 
             const findDescendants = (nodeId, nodes) => {
                 let descendants = [];
