@@ -271,6 +271,10 @@
                 '<text data-width="230" data-text-overflow="ellipsis" style="font-size: 20px;" fill="#000000" x="125" y="100" text-anchor="middle">{val}</text>';
             OrgChart.templates.ana.field_1 =
                 '<text data-width="130" data-text-overflow="ellipsis" style="font-size: 16px;" fill="#000000" x="230" y="30" text-anchor="end">{val}</text>';
+            OrgChart.templates.ana.img_0 =
+                '<clipPath id="circleClip"><circle cx="40" cy="40" r="40"></circle></clipPath>' +
+                '<image preserveAspectRatio="xMidYMid slice" xlink:href="{val}" x="0" y="0" width="80" height="80" clip-path="url(#circleClip)" onerror="this.onerror=null;this.setAttribute(\'href\',\'https://www.pinclipart.com/picdir/big/165-1655940_account-human-person-user-icon-username-png-icon.png\');"></image>';
+
             // กำหนด template สำหรับโหนดเพศชาย
             OrgChart.templates.male = Object.assign({}, OrgChart.templates.ana);
             OrgChart.templates.male.node = '<rect x="0" y="0" height="110" width="250" fill="#87CEFA" stroke-width="2" stroke="#000000" rx="15" ry="15"></rect>';
@@ -500,7 +504,6 @@
 
             const handleSearch = debounce(function () {
                 const searchTerm = searchInput.value.trim().toLowerCase(); // Trim whitespace
-
                 autoCompleteContainer.innerHTML = ''; // Clear previous search results
 
                 if (searchTerm) {
@@ -571,11 +574,17 @@
                     let displayNode = matchedNode;
 
                     if (matchedNode) {
-                        // If node has 'partner' tag, switch to partner node for display
-                        if (matchedNode.tags && matchedNode.tags.includes('partner')) {
-                            const partnerNode = allNodes.find(node => node.id === matchedNode.pid);
-                            if (partnerNode) {
-                                displayNode = partnerNode; // Display partner node in tree
+                        // Check if matched node's id is a pid of any other node
+                        const isPidForOtherNode = allNodes.some(node => node.pid === matchedNode.id);
+
+                        // Change color of the matched node
+                        matchedNode.tags = matchedNode.tags.includes('partner') ? ['searched', 'partner'] : ['searched'];
+
+                        // If the matched node's id is not a pid for any other node, use pid of matchedNode to find the corresponding node with matching id
+                        if (!isPidForOtherNode) {
+                            const nodeWithMatchingId = allNodes.find(node => node.id === matchedNode.pid);
+                            if (nodeWithMatchingId) {
+                                displayNode = nodeWithMatchingId; // Display node with matching id in tree
                             }
                         }
 
@@ -585,17 +594,9 @@
                             allNodes.filter(node => node.pid === descendant.id && node.tags && node.tags.includes('partner'))
                         );
 
-                        // Highlight the matched node
-                        matchedNode.tags = matchedNode.tags.includes('partner') ? ['searched', 'partner'] : ['searched'];
-
                         // Load nodes in tree view
                         const nodesToLoad = [displayNode, ...descendants, ...partners];
                         chart.load([...new Set(nodesToLoad)]); // Use Set to avoid duplicates
-
-                        // After search, if the node has 'partner', display its name in the search box
-                        if (matchedNode.tags.includes('partner')) {
-                            searchInput.value = matchedNode.ชื่อ; // Set the name of the matched node in the input
-                        }
                     }
                 } else {
                     chart.load(allNodes); // Load all nodes if no search term
