@@ -352,7 +352,7 @@
                                     layout: false,
                                     zoom: true,
                                     fit: true,
-                                    expandAll: true
+                                    expandAll: false
                                 },
                                 nodeBinding: {
                                     field_0: "ชื่อ",
@@ -499,87 +499,114 @@
             };
 
             const handleSearch = debounce(function () {
-                const searchTerm = searchInput.value.toLowerCase();
-                autoCompleteContainer.innerHTML = '';
+                const searchTerm = searchInput.value.trim().toLowerCase(); // Trim whitespace
+
+                autoCompleteContainer.innerHTML = ''; // Clear previous search results
 
                 if (searchTerm) {
-                    // Filter nodes with non-null latitude and longitude
-                    let matchedNode = allNodes.find(node =>
-                        node.latitude !== null &&
-                        node.longitude !== null &&
-                        node.ชื่อ.toLowerCase() === searchTerm
-                    );
-
-                    let searchNode = matchedNode; // Set searchNode for searching
-
-                    if (matchedNode && matchedNode.tags && matchedNode.tags.includes('partner')) {
-                        const partnerNode = allNodes.find(node => node.id === matchedNode.pid);
-                        if (partnerNode) {
-                            searchInput.value = matchedNode.ชื่อ; // Show partner's name in the search input
-                            searchNode = partnerNode; // Use partnerNode for searching
-                        }
-                    }
-
+                    // Search for nodes that match the term and have non-null latitude and longitude
                     const suggestions = allNodes
                         .filter(node =>
                             node.latitude !== null &&
                             node.longitude !== null &&
                             node.ชื่อ.toLowerCase().includes(searchTerm)
                         )
-                        .slice(0, 5);
+                        .slice(0, 5); // Limit to 5 suggestions
 
-                    suggestions.forEach(node => {
-                        const suggestionItem = document.createElement('div');
-                        suggestionItem.classList.add('suggestion-item');
+                    // Display suggestions with images and names
+                    if (suggestions.length > 0) {
+                        suggestions.forEach(node => {
+                            const suggestionItem = document.createElement('div');
+                            suggestionItem.classList.add('suggestion-item');
 
-                        // Adding image for each person
-                        const img = document.createElement('img');
-                        img.src = node.img ? node.img : 'default_image.jpg'; // Use default image if none
-                        img.alt = node.ชื่อ;
-                        img.style.width = '30px';
-                        img.style.height = '30px';
-                        img.style.borderRadius = '50%'; // Circle shape
-                        img.style.marginRight = '10px';
+                            // Create and style image
+                            const img = document.createElement('img');
+                            img.src = node.img ? node.img : 'default_image.jpg'; // Fallback image
+                            img.alt = node.ชื่อ;
+                            img.style.width = '30px';
+                            img.style.height = '30px';
+                            img.style.borderRadius = '50%'; // Circular image
+                            img.style.marginRight = '10px';
 
-                        const nameSpan = document.createElement('span');
-                        nameSpan.textContent = node.ชื่อ;
+                            // Fallback for broken images
+                            img.onerror = () => {
+                                img.src = 'default_image.jpg';
+                            };
 
-                        suggestionItem.appendChild(img); // Add image to suggestion item
-                        suggestionItem.appendChild(nameSpan); // Add name to suggestion item
+                            // Create span for displaying name
+                            const nameSpan = document.createElement('span');
+                            nameSpan.textContent = node.ชื่อ;
 
-                        suggestionItem.addEventListener('click', function () {
-                            searchInput.value = node.ชื่อ; // Show name in the search input
-                            autoCompleteContainer.innerHTML = ''; // Clear suggestions
+                            // Append image and name to suggestion item
+                            suggestionItem.appendChild(img);
+                            suggestionItem.appendChild(nameSpan);
 
-                            // Call handleSearch to behave like typing
-                            handleSearch();
+                            // Click event to select name from suggestions
+                            suggestionItem.addEventListener('click', function () {
+                                searchInput.value = node.ชื่อ; // Set selected name in input
+                                autoCompleteContainer.style.display = 'none'; // Hide suggestions
+
+                                // Trigger the search on selection
+                                handleSearch();
+                            });
+
+                            // Append suggestion item to container
+                            autoCompleteContainer.appendChild(suggestionItem);
                         });
+                    } else {
+                        // No results found
+                        const noResultItem = document.createElement('div');
+                        noResultItem.classList.add('no-result');
+                        noResultItem.textContent = 'No results found';
+                        autoCompleteContainer.appendChild(noResultItem);
+                    }
 
-                        autoCompleteContainer.appendChild(suggestionItem);
-                    });
+                    // Find matching node
+                    let matchedNode = allNodes.find(node =>
+                        node.latitude !== null &&
+                        node.longitude !== null &&
+                        node.ชื่อ.toLowerCase() === searchTerm
+                    );
 
-                    if (searchNode) {
-                        // Find descendants without latitude and longitude filtering
-                        const descendants = findDescendants(searchNode.id, allNodes);
+                    let displayNode = matchedNode;
 
-                        // Find partners of children and grandchildren
+                    if (matchedNode) {
+                        // If node has 'partner' tag, switch to partner node for display
+                        if (matchedNode.tags && matchedNode.tags.includes('partner')) {
+                            const partnerNode = allNodes.find(node => node.id === matchedNode.pid);
+                            if (partnerNode) {
+                                displayNode = partnerNode; // Display partner node in tree
+                            }
+                        }
+
+                        // Find descendants and partners
+                        const descendants = findDescendants(displayNode.id, allNodes);
                         const partners = descendants.flatMap(descendant =>
                             allNodes.filter(node => node.pid === descendant.id && node.tags && node.tags.includes('partner'))
                         );
 
-                        // Add 'searched' tag to the matched node for custom highlighting
-                        searchNode.tags = ['searched'];
+                        // Highlight the matched node
+                        matchedNode.tags = matchedNode.tags.includes('partner') ? ['searched', 'partner'] : ['searched'];
 
-                        const nodesToLoad = [searchNode, ...descendants, ...partners];
-                        chart.load([...new Set(nodesToLoad)]);
+                        // Load nodes in tree view
+                        const nodesToLoad = [displayNode, ...descendants, ...partners];
+                        chart.load([...new Set(nodesToLoad)]); // Use Set to avoid duplicates
 
-                        // No need to manually change color here as it's handled via the template
-                        autoCompleteContainer.innerHTML = '';
+                        // After search, if the node has 'partner', display its name in the search box
+                        if (matchedNode.tags.includes('partner')) {
+                            searchInput.value = matchedNode.ชื่อ; // Set the name of the matched node in the input
+                        }
                     }
                 } else {
-                    chart.load(allNodes); // Load all nodes if search term is empty
+                    chart.load(allNodes); // Load all nodes if no search term
                 }
             }, 150);
+
+            // Event listener for input
+            searchInput.addEventListener('input', function () {
+                autoCompleteContainer.style.display = 'block'; // Show suggestions when typing
+                handleSearch(); // Trigger handleSearch when input changes
+            });
 
             const findDescendants = (nodeId, nodes) => {
                 let descendants = [];

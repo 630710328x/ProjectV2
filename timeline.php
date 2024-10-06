@@ -431,11 +431,16 @@ pg_close($conn);
                     .filter(checkbox => checkbox.checked)
                     .map(checkbox => checkbox.value);
 
+                // แยกข้อมูลที่มีค่า null ออกมาจากข้อมูลปกติ
                 const filteredData = timelineData.filter(item =>
                     item.reignstart !== null && selectedKingdoms.includes(item.kingdomname)
                 );
 
-                if (filteredData.length === 0) {
+                const nullData = timelineData.filter(item =>
+                    item.reignstart === null && selectedKingdoms.includes(item.kingdomname)
+                );
+
+                if (filteredData.length === 0 && nullData.length === 0) {
                     return;
                 }
 
@@ -450,6 +455,7 @@ pg_close($conn);
                 const timelineItems = document.createElement('div');
                 timelineItems.classList.add('timeline-items');
 
+                // แสดงข้อมูลตามอาณาจักรก่อน
                 const kingdoms = [...new Set(filteredData.map(item => item.kingdomname))];
                 kingdoms.forEach((kingdom) => {
                     const rowDiv = document.createElement('div');
@@ -460,6 +466,7 @@ pg_close($conn);
                     kingdomLabel.textContent = kingdomNames[kingdom] || kingdom;
                     rowDiv.appendChild(kingdomLabel);
 
+                    // จัดการข้อมูลปกติ (มี reignstart และ reignend)
                     const items = filteredData.filter(item => item.kingdomname === kingdom);
                     let stagger = 0;
 
@@ -476,9 +483,9 @@ pg_close($conn);
                         itemDiv.style.backgroundColor = getColorForKingdom(item.kingdomname);
 
                         itemDiv.innerHTML = `
-        <h3>${item.name}</h3>
-        <p>${formatYear(item.reignstart)} - ${formatYear(item.reignend)}</p>
-    `;
+                <h3>${item.name}</h3>
+                <p>${formatYear(item.reignstart)} - ${formatYear(item.reignend)}</p>
+            `;
 
                         itemDiv.addEventListener('mouseover', () => {
                             itemDiv.style.transform = 'scale(1.05)';
@@ -506,6 +513,62 @@ pg_close($conn);
 
                     timelineItems.appendChild(rowDiv);
                 });
+
+                // เพิ่มแถวสำหรับข้อมูลที่มี null เรียงกันในแถวเดียว
+                if (nullData.length > 0) {
+                    const nullRowDiv = document.createElement('div');
+                    nullRowDiv.classList.add('timeline-row');
+
+                    const nullLabel = document.createElement('div');
+                    nullLabel.classList.add('kingdom-label');
+                    nullLabel.textContent = 'ไม่ทราบช่วงเวลา';
+                    nullRowDiv.appendChild(nullLabel);
+
+                    let leftPosition = maxYear + 20;  // เริ่มจากหลังปีที่มากที่สุด
+
+                    nullData.forEach(item => {
+                        const itemDiv = document.createElement('div');
+                        itemDiv.classList.add('timeline-item');
+                        itemDiv.style.left = `${leftPosition}px`;  // จัดเรียงข้อมูลต่อกัน
+                        itemDiv.style.width = '80px';  // ตั้งค่าขนาดเริ่มต้น
+                        itemDiv.style.top = '0px';  // แถวเดียวกันทั้งหมด
+
+                        itemDiv.style.backgroundColor = getColorForKingdom(item.kingdomname);
+
+                        itemDiv.innerHTML = `
+                <h3>${item.name}</h3>
+                <p>ช่วงเวลาที่ไม่ทราบ</p>
+            `;
+
+                        itemDiv.addEventListener('mouseover', () => {
+                            itemDiv.style.transform = 'scale(1.05)';
+                            itemDiv.style.zIndex = '10';
+                            itemDiv.style.backgroundColor = '#e2e6ea';
+                            itemDiv.style.whiteSpace = 'normal';
+                            itemDiv.style.width = 'auto';
+                        });
+
+                        itemDiv.addEventListener('mouseout', () => {
+                            itemDiv.style.transform = 'scale(1)';
+                            itemDiv.style.zIndex = '1';
+                            itemDiv.style.backgroundColor = getColorForKingdom(item.kingdomname);
+                            itemDiv.style.whiteSpace = 'nowrap';
+                            itemDiv.style.width = '80px';
+                        });
+
+                        itemDiv.addEventListener('click', () => {
+                            const searchName = encodeURIComponent(item.name);
+                            window.location.href = `family_tree.php?id=${item.id}&table=${item.kingdomname}&search=${searchName}`;
+                        });
+
+                        nullRowDiv.appendChild(itemDiv);
+
+                        // ปรับตำแหน่งสำหรับ item ถัดไป
+                        leftPosition += 100;  // เว้นระยะห่างระหว่าง item
+                    });
+
+                    timelineItems.appendChild(nullRowDiv);  // เพิ่มแถว null ไว้ท้ายสุด
+                }
 
                 timelineWrapper.appendChild(timelineItems);
                 renderVerticalLines(minYearSelected, maxYear);
