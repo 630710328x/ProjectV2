@@ -110,10 +110,6 @@
             background-color: #FFD700 !important;
         }
 
-        [data-l-id] path {
-            stroke: #000000;
-        }
-
         [data-n-id] rect:hover {
             filter: drop-shadow(4px 5px 5px #aeaeae);
         }
@@ -266,7 +262,7 @@
             let isTableChanged = false;
 
             OrgChart.templates.ana.defs = '<g transform="matrix(0.05,0,0,0.05,-12,-9)" id="heart"><path fill="#F57C00" d="M438.482,58.61c-24.7-26.549-59.311-41.655-95.573-41.711c-36.291,0.042-70.938,15.14-95.676,41.694l-8.431,8.909  l-8.431-8.909C181.284,5.762,98.663,2.728,45.832,51.815c-2.341,2.176-4.602,4.436-6.778,6.778 c-52.072,56.166-52.072,142.968,0,199.134l187.358,197.581c6.482,6.843,17.284,7.136,24.127,0.654 c0.224-0.212,0.442-0.43,0.654-0.654l187.29-197.581C490.551,201.567,490.551,114.77,438.482,58.61z"/><g>';
-
+            OrgChart.templates.ana.link = '<path stroke-linejoin="round" stroke="#000000" stroke-width="1px" fill="none" d="{edge}" />';
             OrgChart.templates.ana.field_0 =
                 '<text data-width="230" data-text-overflow="ellipsis" style="font-size: 20px;" fill="#000000" x="125" y="100" text-anchor="middle">{val}</text>';
             OrgChart.templates.ana.field_1 =
@@ -317,17 +313,24 @@
                             pid: member.parent_id,
                             ชื่อ: member.name,
                             ตำแหน่ง: member.relationship,
-                            ครองราชย์: (member.reignstart !== null ? "พ.ศ. " + member.reignstart + " - " + (member.reignend !== null ? "พ.ศ. " + member.reignend : "ไม่ปรากฎ") : "ไม่ปรากฎ"),
-                            ประสูติ: member.birth !== null ? "พ.ศ. " + member.birth : "ไม่ปรากฏ",
-                            สวรรคต: member.death !== null ? "พ.ศ. " + member.death : "ไม่ปรากฏ",
+                            ครองราชย์: (member.reignstart !== null
+                                ? `พ.ศ. ${member.reignstart} (ค.ศ. ${member.reignstart - 543}) - `
+                                + (member.reignend !== null ? `พ.ศ. ${member.reignend} (ค.ศ. ${member.reignend - 543})` : "ไม่ปรากฎ")
+                                : "ไม่ปรากฎ"),
+                            ประสูติ: member.birth !== null
+                                ? `พ.ศ. ${member.birth} (ค.ศ. ${member.birth - 543})`
+                                : "ไม่ปรากฏ",
+                            สวรรคต: member.death !== null
+                                ? `พ.ศ. ${member.death} (ค.ศ. ${member.death - 543})`
+                                : "ไม่ปรากฏ",
                             ราชวงศ์: member.monarch !== null ? member.monarch : "ไม่ปรากฏ",
                             คู่สมรส: member.wife !== null ? member.wife : "ไม่ปรากฏ",
                             พระราชบุตร: member.child !== null ? member.child : "ไม่ปรากฏ",
                             บิดา: member.father !== null ? member.father : "ไม่ปรากฏ",
                             มารดา: member.mother !== null ? member.mother : "ไม่ปรากฏ",
                             tags: member.tags,
-                            latitude: member.latitude,
-                            longitude: member.longitude,
+                            ละติจูด: member.latitude,
+                            ลองจิจูด: member.longitude,
                             เพศ: member.gender === 'Female' ? 'หญิง' : 'ชาย',
                             ppid: member.ppid,
                             img: member.img ? member.img : 'https://www.pinclipart.com/picdir/big/165-1655940_account-human-person-user-icon-username-png-icon.png',
@@ -340,7 +343,7 @@
                             chart = new OrgChart(treeContainer, {
                                 nodes: allNodes,
                                 layout: OrgChart.normal,
-                                mouseScrool: OrgChart.none,
+                                mouseScrool: OrgChart.action.ctrlZoom,
                                 align: OrgChart.ORIENTATION,
                                 keyNavigation: false,
                                 filterBy: ['เพศ', 'ราชวงศ์'],
