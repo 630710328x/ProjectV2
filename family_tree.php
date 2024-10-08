@@ -105,6 +105,16 @@
             background-color: #87CEFA !important;
         }
 
+        .boc-edit-form.kingfemale .boc-edit-form-header,
+        .boc-edit-form.kingfemale .boc-img-button {
+            background-color: #FFB6C1 !important;
+        }
+
+        .boc-edit-form.kingmale .boc-edit-form-header,
+        .boc-edit-form.kingmale .boc-img-button {
+            background-color: #87CEFA !important;
+        }
+
         .boc-edit-form.searched .boc-edit-form-header,
         .boc-edit-form.searched .boc-img-button {
             background-color: #FFD700 !important;
@@ -213,7 +223,7 @@
         <h1>Family Tree</h1>
         <nav>
             <ul>
-                <li><a href="index.php">Home</a></li>
+                <li><a href="index.php">Map</a></li>
                 <li><a href="family_tree.php" class="active">Family Tree</a></li>
                 <li><a href="timeline.php">Timeline</a></li>
             </ul>
