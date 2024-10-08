@@ -269,8 +269,41 @@
                 '<text data-width="130" data-text-overflow="ellipsis" style="font-size: 16px;" fill="#000000" x="230" y="30" text-anchor="end">{val}</text>';
             OrgChart.templates.ana.img_0 =
                 '<clipPath id="circleClip"><circle cx="40" cy="40" r="40"></circle></clipPath>' +
-                '<image preserveAspectRatio="xMidYMid slice" xlink:href="{val}" x="0" y="0" width="80" height="80" clip-path="url(#circleClip)" onerror="this.onerror=null;this.setAttribute(\'href\',\'https://www.pinclipart.com/picdir/big/165-1655940_account-human-person-user-icon-username-png-icon.png\');"></image>';
+                '<image preserveAspectRatio="xMidYMid slice" xlink:href="{val}" x="0" y="0" width="80" height="80" clip-path="url(#circleClip)" onerror="this.onerror=null;this.setAttribute(\'href\',\'165-1655940_account-human-person-user-icon-username-png-icon.png\');"></image>';
+            OrgChart.elements.link = function (data, editElement, minWidth, readOnly) {
+                var id = OrgChart.elements.generateId();
+                var value = data[editElement.binding];
+                if (value == undefined) value = '';
+                if (readOnly && !value) {
+                    return {
+                        html: ''
+                    };
+                }
 
+                if (readOnly) {
+                    return {
+                        html: `<label>${editElement.label}</label>
+                   <div style="display: flex; align-items: center; justify-content: center;">
+                       <a href="${value}" target="_blank">
+                         <img src="https://upload.wikimedia.org/wikipedia/commons/6/63/Wikipedia-logo.png" 
+                         alt="Wikipedia Logo" style="width:50px; height:50px; margin-right: 10px;"/>
+                       </a>
+                       <span>${value}</span>
+                   </div>`,
+                        id: id,
+                        value: value
+                    };
+                } else {
+                    return {
+                        html: `<div><label for="${id}">${editElement.label}</label>
+                   <input data-binding="${editElement.binding}" maxlength="256" 
+                   id="${id}" name="${id}" type="text" value="${value}" autocomplete="off"></div>`,
+                        id: id,
+                        value: value
+                    };
+                }
+
+            };
             // กำหนด template สำหรับโหนดเพศชาย
             OrgChart.templates.male = Object.assign({}, OrgChart.templates.ana);
             OrgChart.templates.male.node = '<rect x="0" y="0" height="110" width="250" fill="#87CEFA" stroke-width="2" stroke="#000000" rx="15" ry="15"></rect>';
@@ -333,7 +366,7 @@
                             ลองจิจูด: member.longitude,
                             เพศ: member.gender === 'Female' ? 'หญิง' : 'ชาย',
                             ppid: member.ppid,
-                            img: member.img ? member.img : 'https://www.pinclipart.com/picdir/big/165-1655940_account-human-person-user-icon-username-png-icon.png',
+                            img: member.img ? member.img : '165-1655940_account-human-person-user-icon-username-png-icon.png',
                             วิกิพีเดีย: member.urlking !== null ? member.urlking : "ไม่ปรากฏ"
                         }));
 
@@ -353,7 +386,10 @@
                                         share: null,
                                         pdf: null,
                                         remove: null
-                                    }
+                                    },
+                                    elements: [
+                                        { type: 'link', label: '', binding: 'วิกิพีเดีย' }
+                                    ],
                                 },
                                 toolbar: {
                                     layout: false,
@@ -506,105 +542,95 @@
             };
 
             const handleSearch = debounce(function () {
-                const searchTerm = searchInput.value.trim().toLowerCase(); // Trim whitespace
-                autoCompleteContainer.innerHTML = ''; // Clear previous search results
+                const searchTerm = searchInput.value.toLowerCase();
+                autoCompleteContainer.innerHTML = '';
 
                 if (searchTerm) {
-                    // Search for nodes that match the term and have non-null latitude and longitude
-                    const suggestions = allNodes
-                        .filter(node =>
-                            node.latitude !== null &&
-                            node.longitude !== null &&
-                            node.ชื่อ.toLowerCase().includes(searchTerm)
-                        )
-                        .slice(0, 5); // Limit to 5 suggestions
-
-                    // Display suggestions with images and names
-                    if (suggestions.length > 0) {
-                        suggestions.forEach(node => {
-                            const suggestionItem = document.createElement('div');
-                            suggestionItem.classList.add('suggestion-item');
-
-                            // Create and style image
-                            const img = document.createElement('img');
-                            img.src = node.img ? node.img : 'default_image.jpg'; // Fallback image
-                            img.alt = node.ชื่อ;
-                            img.style.width = '30px';
-                            img.style.height = '30px';
-                            img.style.borderRadius = '50%'; // Circular image
-                            img.style.marginRight = '10px';
-
-                            // Fallback for broken images
-                            img.onerror = () => {
-                                img.src = 'default_image.jpg';
-                            };
-
-                            // Create span for displaying name
-                            const nameSpan = document.createElement('span');
-                            nameSpan.textContent = node.ชื่อ;
-
-                            // Append image and name to suggestion item
-                            suggestionItem.appendChild(img);
-                            suggestionItem.appendChild(nameSpan);
-
-                            // Click event to select name from suggestions
-                            suggestionItem.addEventListener('click', function () {
-                                searchInput.value = node.ชื่อ; // Set selected name in input
-                                autoCompleteContainer.style.display = 'none'; // Hide suggestions
-
-                                // Trigger the search on selection
-                                handleSearch();
-                            });
-
-                            // Append suggestion item to container
-                            autoCompleteContainer.appendChild(suggestionItem);
-                        });
-                    } else {
-                        // No results found
-                        const noResultItem = document.createElement('div');
-                        noResultItem.classList.add('no-result');
-                        noResultItem.textContent = 'No results found';
-                        autoCompleteContainer.appendChild(noResultItem);
-                    }
-
-                    // Find matching node
+                    // ค้นหาโหนดที่ตรงกับคำค้นหาและมี latitude และ longitude ที่ไม่เป็น null
                     let matchedNode = allNodes.find(node =>
                         node.latitude !== null &&
                         node.longitude !== null &&
                         node.ชื่อ.toLowerCase() === searchTerm
                     );
 
-                    let displayNode = matchedNode;
+                    let displayNode = matchedNode; // โหนดที่จะถูกแสดงในแผนภูมิครอบครัว
+
+                    // หากโหนดที่ค้นหามี pid ให้ค้นหาและแสดงโหนดพ่อแม่
+                    if (matchedNode && matchedNode.pid) {
+                        const parentNode = allNodes.find(node => node.id === matchedNode.pid);
+                        if (parentNode) {
+                            displayNode = parentNode; // อัปเดตโหนดที่จะแสดงเป็นโหนดพ่อแม่
+                        }
+                    }
+
+                    // กรองคำแนะนำตามคำค้นหา
+                    const suggestions = allNodes
+                        .filter(node =>
+                            node.latitude !== null &&
+                            node.longitude !== null &&
+                            node.ชื่อ.toLowerCase().includes(searchTerm)
+                        )
+                        .slice(0, 5); // จำกัดคำแนะนำเป็น 5 รายการ
+
+                    suggestions.forEach(node => {
+                        const suggestionItem = document.createElement('div');
+                        suggestionItem.classList.add('suggestion-item');
+
+                        const img = document.createElement('img');
+                        img.src = node.img ? node.img : 'default_image.jpg'; // Default image if not set
+                        img.alt = node.ชื่อ;
+                        img.style.width = '30px';
+                        img.style.height = '30px';
+                        img.style.borderRadius = '50%';
+                        img.style.marginRight = '10px';
+
+                        const nameSpan = document.createElement('span');
+                        nameSpan.textContent = node.ชื่อ;
+
+                        suggestionItem.appendChild(img);
+                        suggestionItem.appendChild(nameSpan);
+
+                        suggestionItem.addEventListener('click', function () {
+                            searchInput.value = node.ชื่อ; // Set search input to the selected name
+                            autoCompleteContainer.innerHTML = ''; // Clear suggestions
+                            autoCompleteContainer.style.display = 'none'; // Hide suggestions after selection
+                            handleSearch(); // Call handleSearch again to load the selected node
+                        });
+
+                        autoCompleteContainer.appendChild(suggestionItem);
+                    });
+
 
                     if (matchedNode) {
-                        // Check if matched node's id is a pid of any other node
-                        const isPidForOtherNode = allNodes.some(node => node.pid === matchedNode.id);
-
-                        // Change color of the matched node
-                        matchedNode.tags = matchedNode.tags.includes('partner') ? ['searched', 'partner'] : ['searched'];
-
-                        // If the matched node's id is not a pid for any other node, use pid of matchedNode to find the corresponding node with matching id
-                        if (!isPidForOtherNode) {
-                            const nodeWithMatchingId = allNodes.find(node => node.id === matchedNode.pid);
-                            if (nodeWithMatchingId) {
-                                displayNode = nodeWithMatchingId; // Display node with matching id in tree
+                        // ตรวจสอบโหนดว่ามี tag 'partner' และสลับเป็นโหนดคู่ถ้ามี
+                        if (matchedNode.tags && matchedNode.tags.includes('partner')) {
+                            const partnerNode = allNodes.find(node => node.id === matchedNode.pid);
+                            if (partnerNode) {
+                                displayNode = partnerNode; // อัปเดตโหนดที่จะแสดงเป็นโหนดคู่
                             }
                         }
 
-                        // Find descendants and partners
+                        // ไม่อัปเดต searchInput.value ที่นี่ เพื่อให้ช่องค้นหายังคงเป็นชื่อที่ค้นหาครั้งแรก
+
+                        // หาลูกหลานและโหนดคู่
                         const descendants = findDescendants(displayNode.id, allNodes);
                         const partners = descendants.flatMap(descendant =>
                             allNodes.filter(node => node.pid === descendant.id && node.tags && node.tags.includes('partner'))
                         );
 
-                        // Load nodes in tree view
+                        // เพิ่ม tag 'searched' สำหรับไฮไลต์โหนด
+                        matchedNode.tags = matchedNode.tags.includes('partner') ? ['searched', 'partner'] : ['searched'];
+
+                        // โหลดโหนดที่ต้องการแสดงโดยไม่ซ้ำกัน
                         const nodesToLoad = [displayNode, ...descendants, ...partners];
-                        chart.load([...new Set(nodesToLoad)]); // Use Set to avoid duplicates
+                        chart.load([...new Set(nodesToLoad)]);
                     }
+
                 } else {
-                    chart.load(allNodes); // Load all nodes if no search term
+                    chart.load(allNodes); // โหลดโหนดทั้งหมดหากไม่มีคำค้นหา
                 }
             }, 150);
+
 
             // Event listener for input
             searchInput.addEventListener('input', function () {
