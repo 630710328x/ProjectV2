@@ -320,10 +320,10 @@ pg_close($conn);
 
 <body>
     <header>
-        <h1>Timeline Overview</h1>
+        <h1>Timeline</h1>
         <nav>
             <ul>
-                <li><a href="index.php">Home</a></li>
+                <li><a href="index.php">Map</a></li>
                 <li><a href="family_tree.php">Family Tree</a></li>
                 <li><a href="timeline.php" class="active">Timeline</a></li>
             </ul>

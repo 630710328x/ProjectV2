@@ -258,7 +258,7 @@ try {
         <h1>Thailand Dynasty Map</h1>
         <nav>
             <ul>
-                <li><a href="index.php" class="active">Home</a></li>
+                <li><a href="index.php" class="active">Map</a></li>
                 <li><a href="family_tree.php">Family Tree</a></li>
                 <li><a href="timeline.php">Timeline</a></li>
             </ul>
