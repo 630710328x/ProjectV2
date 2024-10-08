@@ -316,6 +316,20 @@
             OrgChart.templates.searched = Object.assign({}, OrgChart.templates.ana);
             OrgChart.templates.searched.node = '<rect x="0" y="0" height="110" width="250" fill="#FFD700" stroke-width="2" stroke="#000000" rx="15" ry="15"></rect>';
 
+            OrgChart.templates.kingmale = Object.assign({}, OrgChart.templates.ana);
+            OrgChart.templates.kingmale.node = `
+  <rect x="0" y="0" height="110" width="250" fill="#87CEFA" stroke-width="2" stroke="#000000" rx="15" ry="15"></rect>
+  <image x="70" y="0" width="100" height="100" xlink:href="pngtree-crown-crown-pattern-headwear-accessories-png-image_389135-removebg-preview.png" />
+  <text data-width="230" data-text-overflow="ellipsis" style="font-size: 20px;" fill="#000000" x="125" y="100" text-anchor="middle"></text>
+`;
+
+            OrgChart.templates.kingfemale = Object.assign({}, OrgChart.templates.ana);
+            OrgChart.templates.kingfemale.node = `
+  <rect x="0" y="0" height="110" width="250" fill="#FFB6C1" stroke-width="2" stroke="#000000" rx="15" ry="15"></rect>
+  <image x="70" y="0" width="100" height="100" xlink:href="pngtree-crown-crown-pattern-headwear-accessories-png-image_389135-removebg-preview.png" />
+  <text data-width="230" data-text-overflow="ellipsis" style="font-size: 20px;" fill="#000000" x="125" y="100" text-anchor="middle"></text>
+`;
+
             const fetchFamilyData = (table) => {
                 return fetch(`fetch_family_data.php?table=${table}`)
                     .then(response => {
@@ -341,34 +355,59 @@
                             throw new Error('Invalid data format');
                         }
 
-                        allNodes = familyData.map(member => ({
-                            id: member.id,
-                            pid: member.parent_id,
-                            ชื่อ: member.name,
-                            ตำแหน่ง: member.relationship,
-                            ครองราชย์: (member.reignstart !== null
-                                ? `พ.ศ. ${member.reignstart} (ค.ศ. ${member.reignstart - 543}) - `
-                                + (member.reignend !== null ? `พ.ศ. ${member.reignend} (ค.ศ. ${member.reignend - 543})` : "ไม่ปรากฎ")
-                                : "ไม่ปรากฎ"),
-                            ประสูติ: member.birth !== null
-                                ? `พ.ศ. ${member.birth} (ค.ศ. ${member.birth - 543})`
-                                : "ไม่ปรากฏ",
-                            สวรรคต: member.death !== null
-                                ? `พ.ศ. ${member.death} (ค.ศ. ${member.death - 543})`
-                                : "ไม่ปรากฏ",
-                            ราชวงศ์: member.monarch !== null ? member.monarch : "ไม่ปรากฏ",
-                            คู่สมรส: member.wife !== null ? member.wife : "ไม่ปรากฏ",
-                            พระราชบุตร: member.child !== null ? member.child : "ไม่ปรากฏ",
-                            บิดา: member.father !== null ? member.father : "ไม่ปรากฏ",
-                            มารดา: member.mother !== null ? member.mother : "ไม่ปรากฏ",
-                            tags: member.tags,
-                            ละติจูด: member.latitude,
-                            ลองจิจูด: member.longitude,
-                            เพศ: member.gender === 'Female' ? 'หญิง' : 'ชาย',
-                            ppid: member.ppid,
-                            img: member.img ? member.img : '165-1655940_account-human-person-user-icon-username-png-icon.png',
-                            วิกิพีเดีย: member.urlking !== null ? member.urlking : "ไม่ปรากฏ"
-                        }));
+                        allNodes = familyData.map(member => {
+                            let tags = [];
+
+                            // ตรวจสอบเพศและกำหนด tags ให้กับโหนด
+                            if (member.gender === 'Female') {
+                                if (member.latitude !== null) {
+                                    tags.push('kingfemale');  // ถ้ามีค่า latitude != null และเพศหญิง ใช้ tag kingfemale
+                                } else {
+                                    tags.push('female');  // ถ้าไม่มีค่า latitude ใช้ tag female
+                                }
+                            } else if (member.gender === 'Male') {
+                                if (member.latitude !== null) {
+                                    tags.push('kingmale');  // ถ้ามีค่า latitude != null และเพศชาย ใช้ tag kingmale
+                                } else {
+                                    tags.push('male');  // ถ้าไม่มีค่า latitude ใช้ tag male
+                                }
+                            }
+
+                            // ตรวจสอบว่าโหนดมี partner หรือไม่
+                            if (member.tags && member.tags.includes('partner')) {
+                                tags.push('partner');  // เพิ่ม tag 'partner' ถ้ามีอยู่
+                            }
+
+                            return {
+                                id: member.id,
+                                pid: member.parent_id,
+                                ชื่อ: member.name,
+                                ตำแหน่ง: member.relationship,
+                                ครองราชย์: (member.reignstart !== null
+                                    ? `พ.ศ. ${member.reignstart} (ค.ศ. ${member.reignstart - 543}) - `
+                                    + (member.reignend !== null ? `พ.ศ. ${member.reignend} (ค.ศ. ${member.reignend - 543})` : "ไม่ปรากฎ")
+                                    : "ไม่ปรากฎ"),
+                                ประสูติ: member.birth !== null
+                                    ? `พ.ศ. ${member.birth} (ค.ศ. ${member.birth - 543})`
+                                    : "ไม่ปรากฏ",
+                                สวรรคต: member.death !== null
+                                    ? `พ.ศ. ${member.death} (ค.ศ. ${member.death - 543})`
+                                    : "ไม่ปรากฏ",
+                                ราชวงศ์: member.monarch !== null ? member.monarch : "ไม่ปรากฏ",
+                                คู่สมรส: member.wife !== null ? member.wife : "ไม่ปรากฏ",
+                                พระราชบุตร: member.child !== null ? member.child : "ไม่ปรากฏ",
+                                บิดา: member.father !== null ? member.father : "ไม่ปรากฏ",
+                                มารดา: member.mother !== null ? member.mother : "ไม่ปรากฏ",
+                                tags: tags,  // กำหนด tags ตามที่ตั้งไว้ข้างต้น
+                                ละติจูด: member.latitude,
+                                ลองจิจูด: member.longitude,
+                                เพศ: member.gender === 'Female' ? 'หญิง' : 'ชาย',
+                                ppid: member.ppid,
+                                img: member.img ? member.img : '165-1655940_account-human-person-user-icon-username-png-icon.png',
+                                วิกิพีเดีย: member.urlking !== null ? member.urlking : "ไม่ปรากฏ"
+                            };
+                        });
+
 
                         if (chart) {
                             chart.load(allNodes);
@@ -408,6 +447,12 @@
                                     },
                                     female: {
                                         template: "female"
+                                    },
+                                    kingmale: {
+                                        template: "kingmale"
+                                    },
+                                    kingfemale: {
+                                        template: "kingfemale"
                                     },
                                     searched: {
                                         template: "searched" // Custom template for searched nodes
@@ -653,33 +698,44 @@
             searchInput.addEventListener('input', handleSearch);
 
             resetButton.addEventListener('click', function () {
-                searchInput.value = '';
-                autoCompleteContainer.innerHTML = '';
+                searchInput.value = '';  // เคลียร์ค่าในช่องค้นหา
+                autoCompleteContainer.innerHTML = '';  // ล้างคำแนะนำ
 
-                // คืนค่าสีของโหนดทั้งหมดตามเพศ และเก็บแท็ก partner ถ้ามี
+                // ตั้งค่า tags ใหม่ตามเพศและเงื่อนไข
                 allNodes.forEach(node => {
                     let newTags = [];
 
-                    // เก็บแท็ก partner ไว้ถ้ามี
+                    // ตรวจสอบเพศและกำหนด tags
+                    if (node.เพศ === 'หญิง') {
+                        if (node.ละติจูด !== null) {
+                            newTags.push('kingfemale');  // ถ้ามี latitude != null และเพศหญิง ใช้ tag kingfemale
+                        } else {
+                            newTags.push('female');  // ถ้าไม่มี latitude ใช้ tag female
+                        }
+                    } else if (node.เพศ === 'ชาย') {
+                        if (node.ละติจูด !== null) {
+                            newTags.push('kingmale');  // ถ้ามี latitude != null และเพศชาย ใช้ tag kingmale
+                        } else {
+                            newTags.push('male');  // ถ้าไม่มี latitude ใช้ tag male
+                        }
+                    }
+
+                    // คืนค่า tag 'partner' ถ้ามี
                     if (node.tags && node.tags.includes('partner')) {
                         newTags.push('partner');
                     }
 
-                    // ตั้งค่าแท็กตามเพศ
-                    if (node.เพศ === 'ชาย') {
-                        newTags.push('male');
-                    } else if (node.เพศ === 'หญิง') {
-                        newTags.push('female');
-                    }
-
-                    node.tags = newTags; // ตั้งค่าแท็กใหม่
+                    node.tags = newTags;  // กำหนด tags ใหม่
                 });
 
-                chart.load(allNodes); // โหลดโหนดทั้งหมดเมื่อรีเซ็ตการค้นหา
+                // โหลดโหนดทั้งหมดพร้อมคืนค่า tags และสีตามที่กำหนด
+                chart.load(allNodes);
+
                 setTimeout(function () {
                     alert('ค้นหาได้ถูกรีเซ็ตแล้ว');
                 }, 300);
             });
+
 
 
             loadFamilyData(tableSelect.value).then(() => {
