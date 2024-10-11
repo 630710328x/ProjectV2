@@ -88,6 +88,13 @@
             margin-right: 10px;
         }
 
+        label,
+        [data-binding] {
+
+            color: #000000 !important;
+
+        }
+
         .filter rect,
         .filter image,
         .filter text,
@@ -122,6 +129,14 @@
 
         [data-n-id] rect:hover {
             filter: drop-shadow(4px 5px 5px #aeaeae);
+        }
+
+        [data-l-id] path {
+            stroke: #000000;
+        }
+
+        .partner path {
+            stroke: #750000;
         }
 
         #searchInput {
@@ -625,7 +640,7 @@
                             node.longitude !== null &&
                             node.ชื่อ.toLowerCase().includes(searchTerm)
                         )
-                        .slice(0, 5); // จำกัดคำแนะนำเป็น 5 รายการ
+                        .slice(0, 10); // จำกัดคำแนะนำเป็น 5 รายการ
 
                     suggestions.forEach(node => {
                         const suggestionItem = document.createElement('div');
