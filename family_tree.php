@@ -379,7 +379,8 @@
                         if (!Array.isArray(familyData)) {
                             throw new Error('Invalid data format');
                         }
-
+                        // จัดเรียงโหนดตาม id
+                        familyData.sort((a, b) => a.id - b.id);
                         allNodes = familyData.map(member => {
                             let tags = [];
 
@@ -408,10 +409,8 @@
                                 pid: member.parent_id,
                                 ชื่อ: member.name,
                                 ตำแหน่ง: member.relationship,
-                                ครองราชย์: (member.reignstart !== null
-                                    ? `พ.ศ. ${member.reignstart} (ค.ศ. ${member.reignstart - 543}) - `
-                                    + (member.reignend !== null ? `พ.ศ. ${member.reignend} (ค.ศ. ${member.reignend - 543})` : "ไม่ปรากฎ")
-                                    : "ไม่ปรากฎ"),
+                                ครองราชย์: (member.reignstart !== null ? `พ.ศ. ${member.reignstart} (ค.ศ. ${member.reignstart - 543})` : "ไม่ปรากฎ"),
+                                ครองราชย์สิ้นสุด: (member.reignend !== null ? `พ.ศ. ${member.reignend} (ค.ศ. ${member.reignend - 543})` : "ไม่ปรากฎ"),
                                 ประสูติ: member.birth !== null
                                     ? `พ.ศ. ${member.birth} (ค.ศ. ${member.birth - 543})`
                                     : "ไม่ปรากฏ",
@@ -492,7 +491,7 @@
                                 var names = Object.keys(sender.filterBy);
                                 var index = names.indexOf(args.name);
                                 if (index == names.length - 1) {
-                                    args.html += `<div data-btn-reset style="color: #039BE5;">reset</div>`;
+                                    args.html += `<div data-btn-reset style="color: #039BE5;">รีเซ็ต</div>`;
                                 }
                             });
                         }
@@ -611,8 +610,8 @@
                 };
             };
 
-            const handleSearch = debounce(function () {
-                const searchTerm = searchInput.value.toLowerCase();
+            const handleSearch = debounce(function (selectedName) {
+                const searchTerm = selectedName.toLowerCase(); // รับค่าชื่อที่ถูกคลิกแทนการพิมพ์
                 autoCompleteContainer.innerHTML = '';
 
                 if (searchTerm) {
@@ -620,39 +619,100 @@
                     let matchedNode = allNodes.find(node =>
                         node.latitude !== null &&
                         node.longitude !== null &&
-                        node.ชื่อ.toLowerCase() === searchTerm
+                        node.ชื่อ.toLowerCase() === searchTerm // ค้นหาด้วยชื่อที่คลิกเท่านั้น
                     );
 
                     let displayNode = matchedNode; // โหนดที่จะถูกแสดงในแผนภูมิครอบครัว
 
-                    // หากโหนดที่ค้นหามี pid ให้ค้นหาและแสดงโหนดพ่อแม่
-                    if (matchedNode && matchedNode.pid) {
-                        const parentNode = allNodes.find(node => node.id === matchedNode.pid);
-                        if (parentNode) {
-                            displayNode = parentNode; // อัปเดตโหนดที่จะแสดงเป็นโหนดพ่อแม่
+                    if (matchedNode && matchedNode.ชื่อ.toLowerCase().includes('ครั้งที่')) {
+                        matchedNode.tags = ['searched'];
+
+                        const firstParentNode = allNodes.find(node => node.id === matchedNode.pid && node.latitude !== null && node.longitude !== null);
+                        let secondParentNode;
+                        if (firstParentNode) {
+                            secondParentNode = allNodes.find(node => node.id === firstParentNode.pid && node.latitude !== null && node.longitude !== null);
                         }
+
+                        const nodesToLoad = [matchedNode];
+                        if (firstParentNode) nodesToLoad.push(firstParentNode);
+                        if (secondParentNode) nodesToLoad.push(secondParentNode);
+
+                        const descendants = findDescendants(matchedNode.id, allNodes);
+                        const grandchildren = descendants.flatMap(descendant => findDescendants(descendant.id, allNodes));
+
+                        const partners = [...descendants, ...grandchildren].flatMap(descendant =>
+                            allNodes.filter(node => node.pid === descendant.id && node.tags && node.tags.includes('partner') && node.latitude !== null && node.longitude !== null)
+                        );
+
+                        chart.load([...new Set([...nodesToLoad, ...descendants, ...grandchildren, ...partners])]);
+
+                    } else {
+                        if (matchedNode && matchedNode.pid) {
+                            const parentNode = allNodes.find(node => node.id === matchedNode.pid && node.latitude !== null && node.longitude !== null);
+                            if (parentNode) {
+                                displayNode = parentNode;
+                            }
+                        }
+
+                        const descendants = findDescendants(displayNode.id, allNodes);
+
+                        let partnerNode = null;
+                        if (matchedNode.tags && matchedNode.tags.includes('partner')) {
+                            partnerNode = allNodes.find(node => node.id === matchedNode.pid && node.tags && node.tags.includes('partner') && node.latitude !== null && node.longitude !== null);
+                        }
+
+                        const partners = descendants.flatMap(descendant =>
+                            allNodes.filter(node => node.pid === descendant.id && node.tags && node.tags.includes('partner') && node.latitude !== null && node.longitude !== null)
+                        );
+
+                        if (partnerNode) {
+                            partners.push(partnerNode);
+                        }
+
+                        matchedNode.tags = matchedNode.tags.includes('partner') ? ['searched', 'partner'] : ['searched'];
+                        const nodesToLoad = [displayNode, ...descendants, ...partners];
+                        chart.load([...new Set(nodesToLoad)]);
                     }
+                } else {
+                    chart.load(allNodes); // โหลดโหนดทั้งหมดหากไม่มีคำค้นหา
+                }
+            }, 150);
 
-                    // กรองคำแนะนำตามคำค้นหา
-                    const suggestions = allNodes
-                        .filter(node =>
-                            node.latitude !== null &&
-                            node.longitude !== null &&
-                            node.ชื่อ.toLowerCase().includes(searchTerm)
-                        )
-                        .slice(0, 10); // จำกัดคำแนะนำเป็น 5 รายการ
+            // ฟังก์ชันแสดงคำแนะนำ (จะเรียกเมื่อผู้ใช้พิมพ์)
+            function showSuggestions(searchTerm) {
+                autoCompleteContainer.innerHTML = '';
 
+                // กรองเฉพาะโหนดที่ latitude และ longitude ไม่เป็น null
+                const suggestions = allNodes
+                    .filter(node =>
+                        node.latitude !== null &&
+                        node.longitude !== null &&
+                        node.ชื่อ.toLowerCase().includes(searchTerm.toLowerCase())
+                    )
+                    .slice(0, 10); // จำกัดคำแนะนำเป็น 10 รายการ
+
+                // หากไม่พบคำแนะนำใดๆ แสดงข้อความ "ไม่พบ"
+                if (suggestions.length === 0) {
+                    const noResultsItem = document.createElement('div');
+                    noResultsItem.classList.add('no-results-item');
+                    noResultsItem.textContent = 'ไม่พบ';
+                    autoCompleteContainer.appendChild(noResultsItem);
+                } else {
                     suggestions.forEach(node => {
                         const suggestionItem = document.createElement('div');
                         suggestionItem.classList.add('suggestion-item');
 
                         const img = document.createElement('img');
-                        img.src = node.img ? node.img : 'default_image.jpg'; // Default image if not set
+                        img.src = node.img ? node.img : 'default_image.jpg';
                         img.alt = node.ชื่อ;
                         img.style.width = '30px';
                         img.style.height = '30px';
                         img.style.borderRadius = '50%';
                         img.style.marginRight = '10px';
+
+                        img.onerror = function () {
+                            this.src = '165-1655940_account-human-person-user-icon-username-png-icon.png'; // รูปภาพสำรอง
+                        };
 
                         const nameSpan = document.createElement('span');
                         nameSpan.textContent = node.ชื่อ;
@@ -660,52 +720,29 @@
                         suggestionItem.appendChild(img);
                         suggestionItem.appendChild(nameSpan);
 
+                        // เมื่อคลิกที่คำแนะนำ จะเริ่มการค้นหา
                         suggestionItem.addEventListener('click', function () {
-                            searchInput.value = node.ชื่อ; // Set search input to the selected name
-                            autoCompleteContainer.innerHTML = ''; // Clear suggestions
-                            autoCompleteContainer.style.display = 'none'; // Hide suggestions after selection
-                            handleSearch(); // Call handleSearch again to load the selected node
+                            searchInput.value = node.ชื่อ; // อัปเดตช่องค้นหา
+                            autoCompleteContainer.innerHTML = ''; // ล้างลิสต์แนะนำ
+                            autoCompleteContainer.style.display = 'none'; // ซ่อนลิสต์แนะนำ
+                            handleSearch(node.ชื่อ); // เรียกการค้นหาด้วยชื่อที่ถูกคลิก
                         });
 
                         autoCompleteContainer.appendChild(suggestionItem);
                     });
-
-
-                    if (matchedNode) {
-                        // ตรวจสอบโหนดว่ามี tag 'partner' และสลับเป็นโหนดคู่ถ้ามี
-                        if (matchedNode.tags && matchedNode.tags.includes('partner')) {
-                            const partnerNode = allNodes.find(node => node.id === matchedNode.pid);
-                            if (partnerNode) {
-                                displayNode = partnerNode; // อัปเดตโหนดที่จะแสดงเป็นโหนดคู่
-                            }
-                        }
-
-                        // ไม่อัปเดต searchInput.value ที่นี่ เพื่อให้ช่องค้นหายังคงเป็นชื่อที่ค้นหาครั้งแรก
-
-                        // หาลูกหลานและโหนดคู่
-                        const descendants = findDescendants(displayNode.id, allNodes);
-                        const partners = descendants.flatMap(descendant =>
-                            allNodes.filter(node => node.pid === descendant.id && node.tags && node.tags.includes('partner'))
-                        );
-
-                        // เพิ่ม tag 'searched' สำหรับไฮไลต์โหนด
-                        matchedNode.tags = matchedNode.tags.includes('partner') ? ['searched', 'partner'] : ['searched'];
-
-                        // โหลดโหนดที่ต้องการแสดงโดยไม่ซ้ำกัน
-                        const nodesToLoad = [displayNode, ...descendants, ...partners];
-                        chart.load([...new Set(nodesToLoad)]);
-                    }
-
-                } else {
-                    chart.load(allNodes); // โหลดโหนดทั้งหมดหากไม่มีคำค้นหา
                 }
-            }, 150);
+            }
 
-
-            // Event listener for input
+            // ฟังก์ชันการพิมพ์ในช่องค้นหา
             searchInput.addEventListener('input', function () {
-                autoCompleteContainer.style.display = 'block'; // Show suggestions when typing
-                handleSearch(); // Trigger handleSearch when input changes
+                const searchTerm = searchInput.value;
+                if (searchTerm) {
+                    autoCompleteContainer.style.display = 'block'; // แสดงลิสต์คำแนะนำ
+                    showSuggestions(searchTerm); // แสดงคำแนะนำ
+                } else {
+                    autoCompleteContainer.innerHTML = '';
+                    autoCompleteContainer.style.display = 'none'; // ซ่อนลิสต์หากไม่มีคำค้นหา
+                }
             });
 
             const findDescendants = (nodeId, nodes) => {
