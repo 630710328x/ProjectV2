@@ -295,7 +295,7 @@
             OrgChart.templates.ana.img_0 =
                 '<clipPath id="circleClip"><circle cx="40" cy="40" r="40"></circle></clipPath>' +
                 '<image preserveAspectRatio="xMidYMid slice" xlink:href="{val}" x="0" y="0" width="80" height="80" clip-path="url(#circleClip)" onerror="this.onerror=null;this.setAttribute(\'href\',\'165-1655940_account-human-person-user-icon-username-png-icon.png\');"></image>';
-            OrgChart.elements.link = function (data, editElement, minWidth, readOnly) {
+            OrgChart.elements.link1 = function (data, editElement, minWidth, readOnly) {
                 var id = OrgChart.elements.generateId();
                 var value = data[editElement.binding];
                 if (value == undefined) value = '';
@@ -311,6 +311,41 @@
                    <div style="display: flex; align-items: center; justify-content: center;">
                        <a href="${value}" target="_blank">
                          <img src="https://upload.wikimedia.org/wikipedia/commons/6/63/Wikipedia-logo.png" 
+                         alt="Wikipedia Logo" style="width:50px; height:50px; margin-right: 10px;"/>
+                       </a>
+                       <span>${value}</span>
+                   </div>`,
+                        id: id,
+                        value: value
+                    };
+                } else {
+                    return {
+                        html: `<div><label for="${id}">${editElement.label}</label>
+                   <input data-binding="${editElement.binding}" maxlength="256" 
+                   id="${id}" name="${id}" type="text" value="${value}" autocomplete="off"></div>`,
+                        id: id,
+                        value: value
+                    };
+                }
+
+            };
+
+            OrgChart.elements.link2 = function (data, editElement, minWidth, readOnly) {
+                var id = OrgChart.elements.generateId();
+                var value = data[editElement.binding];
+                if (value == undefined) value = '';
+                if (readOnly && !value) {
+                    return {
+                        html: ''
+                    };
+                }
+
+                if (readOnly) {
+                    return {
+                        html: `<label>${editElement.label}</label>
+                   <div style="display: flex; align-items: center; justify-content: center;">
+                       <a href="${value}" target="_blank">
+                         <img src="https://logoeps.com/wp-content/uploads/2014/05/49360-wikipedia-logo-icon-vector-icon-vector-eps.png" 
                          alt="Wikipedia Logo" style="width:50px; height:50px; margin-right: 10px;"/>
                        </a>
                        <span>${value}</span>
@@ -423,12 +458,13 @@
                                 บิดา: member.father !== null ? member.father : "ไม่ปรากฏ",
                                 มารดา: member.mother !== null ? member.mother : "ไม่ปรากฏ",
                                 tags: tags,  // กำหนด tags ตามที่ตั้งไว้ข้างต้น
+                                เพศ: member.gender === 'Female' ? 'หญิง' : 'ชาย',
                                 ละติจูด: member.latitude,
                                 ลองจิจูด: member.longitude,
-                                เพศ: member.gender === 'Female' ? 'หญิง' : 'ชาย',
                                 ppid: member.ppid,
                                 img: member.img ? member.img : '165-1655940_account-human-person-user-icon-username-png-icon.png',
-                                วิกิพีเดีย: member.urlking !== null ? member.urlking : "ไม่ปรากฏ"
+                                วิกิพีเดีย: member.urlking !== null ? member.urlking : "ไม่ปรากฏ",
+                                url: member.url !== null ? member.url : "ไม่ปรากฏ",
                             };
                         });
 
@@ -451,7 +487,8 @@
                                         remove: null
                                     },
                                     elements: [
-                                        { type: 'link', label: '', binding: 'วิกิพีเดีย' }
+                                        { type: 'link2', label: '', binding: 'url' },
+                                        { type: 'link1', label: '', binding: 'วิกิพีเดีย' },
                                     ],
                                 },
                                 toolbar: {
