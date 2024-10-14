@@ -555,8 +555,8 @@ try {
                     var kingdomName = parts[2];
 
                     markersMap[key].forEach(function (markerData, index) {
-                        var latitude = baseLatitude + (index * 0.15);
-                        var longitude = baseLongitude + (index * 0.15);
+                        var latitude = baseLatitude - (index * 0.15);
+                        var longitude = baseLongitude - (index * 0.15);
 
                         L.marker([latitude, longitude])
                             .bindPopup(markerData.popupContent, {
