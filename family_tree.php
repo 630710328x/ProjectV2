@@ -798,8 +798,6 @@
                 }, 300);
             });
 
-
-
             loadFamilyData(tableSelect.value).then(() => {
                 isTableChanged = false;
                 highlightNode();
@@ -807,12 +805,11 @@
 
             function highlightNode() {
                 const urlParams = new URLSearchParams(window.location.search);
-                const selectedId = urlParams.get('id');
                 const searchName = urlParams.get('search');
 
-                if (searchName && !isTableChanged) {
-                    searchInput.value = decodeURIComponent(searchName);
-                    handleSearch();
+                if (searchName) {
+                    searchInput.value = decodeURIComponent(searchName);  // Pre-fill the search box with the name
+                    handleSearch(searchName);  // Perform the search using the pre-filled name
                 } else {
                     searchInput.value = '';  // Clear search input if table is changed or no searchName in URL
                 }
