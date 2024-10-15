@@ -181,7 +181,6 @@ try {
             height: 823px;
             margin: 20px;
             border: 1px solid #ccc;
-            width: 97.8%;
         }
 
         .form-container {
@@ -241,56 +240,15 @@ try {
             border-radius: 20px;
         }
 
-        /* Media query for responsiveness */
-        @media (max-width: 1200px) {
-            .form-container {
-                position: static;
-                margin: 10px auto;
-                width: 100%;
-                max-width: 400px;
-            }
-
-            #map {
-                margin: 10px 0;
-                height: 500px;
-                width: 100%;
-            }
-        }
-
         @media (max-width: 768px) {
             header h1 {
                 font-size: 24px;
             }
 
-            nav ul li a {
-                font-size: 16px;
-            }
-
             .form-container {
-                width: 100%;
-                margin: 0;
-            }
-
-            #map {
-                height: 400px;
+                margin: 10px;
             }
         }
-
-        @media (max-width: 576px) {
-            header h1 {
-                font-size: 20px;
-            }
-
-            .form-container {
-                padding: 5px;
-                width: 100%;
-            }
-
-            #map {
-                height: 300px;
-            }
-        }
-
     </style>
 
 </head>
