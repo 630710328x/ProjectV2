@@ -240,8 +240,7 @@ try {
             border: none;
             border-radius: 5px;
             cursor: pointer;
-            width: 100%;
-            /* ให้ปุ่มเต็มพื้นที่ */
+            width: flex;
         }
 
         button:hover {
