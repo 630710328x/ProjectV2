@@ -144,6 +144,7 @@ try {
             color: #ffffff;
             text-align: center;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            width: 100%;
         }
 
         header h1 {
@@ -157,6 +158,8 @@ try {
             margin: 15px 0 0 0;
             display: flex;
             justify-content: center;
+            flex-wrap: wrap;
+            /* ทำให้เมนูห่อเมื่อหน้าจอเล็ก */
         }
 
         nav ul li {
@@ -178,8 +181,11 @@ try {
         }
 
         #map {
-            height: 823px;
-            margin: 20px;
+            height: 84.5vh;
+            /* ใช้ height เป็นสัดส่วนของหน้าจอ */
+            width: 100%;
+            /* ให้แผนที่ใช้พื้นที่หน้าจอทั้งหมด */
+            margin: 20px auto;
             border: 1px solid #ccc;
         }
 
@@ -195,6 +201,8 @@ try {
             max-height: 80vh;
             overflow-y: auto;
             width: 300px;
+            max-width: 90%;
+            /* เพิ่มให้คอนเทนเนอร์ปรับตามหน้าจอ */
         }
 
         fieldset {
@@ -221,6 +229,8 @@ try {
             margin-bottom: 10px;
             border: 1px solid #ccc;
             border-radius: 3px;
+            box-sizing: border-box;
+            /* เพื่อให้ padding รวมกับขนาดกล่อง */
         }
 
         button {
@@ -230,6 +240,8 @@ try {
             border: none;
             border-radius: 5px;
             cursor: pointer;
+            width: 100%;
+            /* ให้ปุ่มเต็มพื้นที่ */
         }
 
         button:hover {
@@ -240,13 +252,42 @@ try {
             border-radius: 20px;
         }
 
+        /* Responsive adjustments */
         @media (max-width: 768px) {
             header h1 {
                 font-size: 24px;
             }
 
             .form-container {
-                margin: 10px;
+                top: 10px;
+                right: 10px;
+                width: 90%;
+                /* ปรับความกว้างให้เต็มหน้าจอบนอุปกรณ์เล็ก */
+                max-width: 400px;
+                max-height: 60vh;
+            }
+
+            #map {
+                height: 50vh;
+                /* ลดความสูงของแผนที่บนหน้าจอขนาดเล็ก */
+                width: 95%;
+            }
+
+            nav ul {
+                flex-direction: column;
+                /* ทำให้เมนูซ้อนกันเป็นแนวตั้งเมื่อหน้าจอเล็ก */
+                text-align: center;
+            }
+
+            nav ul li {
+                margin: 5px 0;
+            }
+        }
+
+        @media (max-width: 576px) {
+            #map {
+                height: 40vh;
+                /* ลดความสูงของแผนที่เพิ่มเติมสำหรับหน้าจอขนาดเล็กมาก */
             }
         }
     </style>
