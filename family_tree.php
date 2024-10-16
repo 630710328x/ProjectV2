@@ -459,6 +459,8 @@
                                 มารดา: member.mother !== null ? member.mother : "ไม่ปรากฏ",
                                 tags: tags,  // กำหนด tags ตามที่ตั้งไว้ข้างต้น
                                 เพศ: member.gender === 'Female' ? 'หญิง' : 'ชาย',
+                                ละติจูด: member.latitude,
+                                ลองจิจูด: member.longitude,
                                 ppid: member.ppid,
                                 img: member.img ? member.img : '165-1655940_account-human-person-user-icon-username-png-icon.png',
                                 วิกิพีเดีย: member.urlking !== null ? member.urlking : "ไม่ปรากฏ",
@@ -717,8 +719,8 @@
                 // กรองเฉพาะโหนดที่ latitude และ longitude ไม่เป็น null
                 const suggestions = allNodes
                     .filter(node =>
-                        node.latitude !== null &&
-                        node.longitude !== null &&
+                        node.ละติจูด !== null &&
+                        node.ลองจิจูด !== null &&
                         node.ชื่อ.toLowerCase().includes(searchTerm.toLowerCase())
                     )
                     .slice(0, 10); // จำกัดคำแนะนำเป็น 10 รายการ
@@ -764,6 +766,7 @@
                     });
                 }
             }
+
 
             // ฟังก์ชันการพิมพ์ในช่องค้นหา
             searchInput.addEventListener('input', function () {
