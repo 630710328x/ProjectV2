@@ -54,7 +54,7 @@ pg_close($conn);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Timeline Overview</title>
+    <title>Timeline</title>
     <style>
         body {
             font-family: 'Helvetica Neue', Arial, sans-serif;

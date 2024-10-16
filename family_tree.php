@@ -459,8 +459,6 @@
                                 มารดา: member.mother !== null ? member.mother : "ไม่ปรากฏ",
                                 tags: tags,  // กำหนด tags ตามที่ตั้งไว้ข้างต้น
                                 เพศ: member.gender === 'Female' ? 'หญิง' : 'ชาย',
-                                ละติจูด: member.latitude,
-                                ลองจิจูด: member.longitude,
                                 ppid: member.ppid,
                                 img: member.img ? member.img : '165-1655940_account-human-person-user-icon-username-png-icon.png',
                                 วิกิพีเดีย: member.urlking !== null ? member.urlking : "ไม่ปรากฏ",
@@ -652,10 +650,7 @@
                 autoCompleteContainer.innerHTML = '';
 
                 if (searchTerm) {
-                    // ค้นหาโหนดที่ตรงกับคำค้นหาและมี latitude และ longitude ที่ไม่เป็น null
                     let matchedNode = allNodes.find(node =>
-                        node.latitude !== null &&
-                        node.longitude !== null &&
                         node.ชื่อ.toLowerCase() === searchTerm // ค้นหาด้วยชื่อที่คลิกเท่านั้น
                     );
 
@@ -664,10 +659,10 @@
                     if (matchedNode && matchedNode.ชื่อ.toLowerCase().includes('ครั้งที่')) {
                         matchedNode.tags = ['searched'];
 
-                        const firstParentNode = allNodes.find(node => node.id === matchedNode.pid && node.latitude !== null && node.longitude !== null);
+                        const firstParentNode = allNodes.find(node => node.id === matchedNode.pid);
                         let secondParentNode;
                         if (firstParentNode) {
-                            secondParentNode = allNodes.find(node => node.id === firstParentNode.pid && node.latitude !== null && node.longitude !== null);
+                            secondParentNode = allNodes.find(node => node.id === firstParentNode.pid);
                         }
 
                         const nodesToLoad = [matchedNode];
@@ -678,14 +673,14 @@
                         const grandchildren = descendants.flatMap(descendant => findDescendants(descendant.id, allNodes));
 
                         const partners = [...descendants, ...grandchildren].flatMap(descendant =>
-                            allNodes.filter(node => node.pid === descendant.id && node.tags && node.tags.includes('partner') && node.latitude !== null && node.longitude !== null)
+                            allNodes.filter(node => node.pid === descendant.id && node.tags && node.tags.includes('partner'))
                         );
 
                         chart.load([...new Set([...nodesToLoad, ...descendants, ...grandchildren, ...partners])]);
 
                     } else {
                         if (matchedNode && matchedNode.pid) {
-                            const parentNode = allNodes.find(node => node.id === matchedNode.pid && node.latitude !== null && node.longitude !== null);
+                            const parentNode = allNodes.find(node => node.id === matchedNode.pid);
                             if (parentNode) {
                                 displayNode = parentNode;
                             }
@@ -849,14 +844,6 @@
                     handleSearch(searchName);  // Perform the search using the pre-filled name
                 } else {
                     searchInput.value = '';  // Clear search input if table is changed or no searchName in URL
-                }
-
-                if (selectedId && chart) {
-                    const nodeElement = chart.getNodeElement(selectedId);
-                    if (nodeElement) {
-                        nodeElement.style.border = "3px solid red";
-                        nodeElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    }
                 }
             }
 
