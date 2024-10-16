@@ -330,7 +330,7 @@ try {
         <div class="form-container">
             <form method="POST" action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>" id="searchForm">
                 <fieldset>
-                    <legend>Select Kingdoms:</legend>
+                    <legend>เลือกอาณาจักร:</legend>
                     <label><input type="checkbox" id="selectAll">เลือกทั้งหมด</label><br>
                     <?php
                     $selected_kingdoms = isset($_POST['kingdoms']) ? $_POST['kingdoms'] : array();
