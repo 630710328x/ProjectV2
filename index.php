@@ -77,14 +77,14 @@ try {
     foreach ($tables as $table) {
         // Check if we should reset or not perform any specific filtering
         if ($reset || ($inputYear === null && empty($inputName) && empty($inputRelationship))) {
-            $stmt = $pdo->prepare("SELECT latitude, longitude, name, kingdomname, url, imgplace, reignstart, reignend, after, before, relationship FROM $table WHERE id = 1 LIMIT 1");
+            $stmt = $pdo->prepare("SELECT latitude, longitude, name, kingdomname, url, urlking, imgplace, reignstart, reignend, after, before, relationship FROM $table WHERE id = 1 LIMIT 1");
         } elseif (!empty($inputName)) {
-            $stmt = $pdo->prepare("SELECT latitude, longitude, name, kingdomname, url, imgplace, reignstart, reignend, after, before, relationship FROM $table WHERE name ILIKE :name");
+            $stmt = $pdo->prepare("SELECT latitude, longitude, name, kingdomname, url, urlking, imgplace, reignstart, reignend, after, before, relationship FROM $table WHERE name ILIKE :name");
             $nameParam = '%' . $inputName . '%';
             $stmt->bindParam(':name', $nameParam, PDO::PARAM_STR);
         } elseif (!empty($inputRelationship)) {
             // Query for รัชกาลที่ input and check for exact match
-            $stmt = $pdo->prepare("SELECT latitude, longitude, name, kingdomname, url, imgplace, reignstart, reignend, after, before, relationship 
+            $stmt = $pdo->prepare("SELECT latitude, longitude, name, kingdomname, url, urlking, imgplace, reignstart, reignend, after, before, relationship 
                                    FROM $table 
                                    WHERE relationship = :relationship
                                    OR relationship LIKE :relationshipWithTimes 
@@ -566,11 +566,14 @@ try {
                             popupContent: `
                             <div style="text-align: center;">
                                 <img src="${location.imgplace}" alt="${location.name}" style="width: 200px; height: auto; margin-bottom: 8px;">
-                                <p style="margin-top: 8px;">
-                                    <a href="${location.url}" target="_blank">
-                                        <img src="https://logoeps.com/wp-content/uploads/2014/05/49360-wikipedia-logo-icon-vector-icon-vector-eps.png" alt="Wikipedia" style="width: 30px; height: auto; margin-right: 0px;">
-                                    </a>
-                                </p>
+                                <div style="display: flex; justify-content: center; align-items: center; margin-top: 8px;">
+                                <a href="${location.url}" target="_blank" style="margin-right: 10px;">
+                                    <img src="https://logoeps.com/wp-content/uploads/2014/05/49360-wikipedia-logo-icon-vector-icon-vector-eps.png" alt="Wikipedia" style="width: 30px; height: auto;">
+                                </a>
+                                <a href="${location.urlking}" target="_blank">
+                                    <img src="https://upload.wikimedia.org/wikipedia/commons/6/63/Wikipedia-logo.png" alt="Wikipedia" style="width: 30px; height: auto;">
+                                </a>
+                                </div>
                                 <h3 style="margin-bottom: 8px;">${location.kingdomname}</h3>
                                 <p>${location.relationship}</p>
                                 <p>พระนาม : ${location.name}</p>
