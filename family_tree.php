@@ -135,10 +135,6 @@
             stroke: #000000;
         }
 
-        .partner path {
-            stroke: #750000;
-        }
-
         #searchInput {
             margin: 10px;
             padding: 8px;
@@ -180,18 +176,27 @@
             background-color: #ffffff;
             position: absolute;
             z-index: 1000;
-            width: 200px;
-            border-radius: 4px;
+            width: 220px;
+            /* ขยายความกว้างของ container */
+            border-radius: 8px;
+            /* เพิ่มความโค้งมน */
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             margin-top: 5px;
-            transform: translateX(17px);
+            padding: 5px;
+            /* เพิ่ม padding รอบๆ */
+            transform: translateX(3px);
         }
 
         .suggestion-item {
             padding: 10px;
+            display: flex;
+            /* ใช้ flex เพื่อจัดเรียงรูปและข้อความ */
+            align-items: center;
             cursor: pointer;
             border-bottom: 1px solid #eee;
             transition: background-color 0.2s ease;
+            border-radius: 6px;
+            /* เพิ่มความโค้งมนให้กับ suggestion */
         }
 
         .suggestion-item:last-child {
@@ -199,8 +204,29 @@
         }
 
         .suggestion-item:hover {
-            background-color: #f8f9fa;
+            background-color: #f0f2f5;
+            /* เปลี่ยนสีพื้นหลังเมื่อ hover */
         }
+
+        .suggestion-item img {
+            width: 40px;
+            /* ขยายขนาดรูปภาพ */
+            height: 40px;
+            border-radius: 50%;
+            /* ทำให้รูปภาพกลม */
+            margin-right: 10px;
+        }
+
+        .suggestion-item span {
+            font-size: 16px;
+            /* ขยายขนาดฟอนต์ */
+            font-weight: bold;
+            /* ทำให้ตัวหนังสือหนา */
+            color: #333;
+            line-height: 1.2;
+            /* จัดระยะบรรทัดให้ดูเป็นระเบียบ */
+        }
+
 
         .autocomplete-wrapper {
             position: relative;
@@ -444,13 +470,29 @@
                                 pid: member.parent_id,
                                 ชื่อ: member.name,
                                 ตำแหน่ง: member.relationship,
-                                ครองราชย์: (member.reignstart !== null ? `พ.ศ. ${member.reignstart} (ค.ศ. ${member.reignstart - 543})` : "ไม่ปรากฎ"),
-                                ครองราชย์สิ้นสุด: (member.reignend !== null ? `พ.ศ. ${member.reignend} (ค.ศ. ${member.reignend - 543})` : "ไม่ปรากฎ"),
+                                ครองราชย์: member.reignstart !== null
+                                    ? `พ.ศ. ${member.reignstart} (ค.ศ. ${member.reignstart - 543}) ` +
+                                    ((member.reignstart - 2324) < 0
+                                        ? `(ก่อน ร.ศ. ${Math.abs(member.reignstart - 2324)})`
+                                        : `(ร.ศ. ${member.reignstart - 2324})`)
+                                    : "ไม่ปรากฎ",
+                                ครองราชย์สิ้นสุด: member.reignend !== null
+                                    ? `พ.ศ. ${member.reignend} (ค.ศ. ${member.reignend - 543}) ` +
+                                    ((member.reignend - 2324) < 0
+                                        ? `(ก่อน ร.ศ. ${Math.abs(member.reignend - 2324)})`
+                                        : `(ร.ศ. ${member.reignend - 2324})`)
+                                    : "ไม่ปรากฎ",
                                 ประสูติ: member.birth !== null
-                                    ? `พ.ศ. ${member.birth} (ค.ศ. ${member.birth - 543})`
+                                    ? `พ.ศ. ${member.birth} (ค.ศ. ${member.birth - 543}) ` +
+                                    ((member.birth - 2324) < 0
+                                        ? `(ก่อน ร.ศ. ${Math.abs(member.birth - 2324)})`
+                                        : `(ร.ศ. ${member.birth - 2324})`)
                                     : "ไม่ปรากฏ",
                                 สวรรคต: member.death !== null
-                                    ? `พ.ศ. ${member.death} (ค.ศ. ${member.death - 543})`
+                                    ? `พ.ศ. ${member.death} (ค.ศ. ${member.death - 543}) ` +
+                                    ((member.death - 2324) < 0
+                                        ? `(ก่อน ร.ศ. ${Math.abs(member.death - 2324)})`
+                                        : `(ร.ศ. ${member.death - 2324})`)
                                     : "ไม่ปรากฏ",
                                 ราชวงศ์: member.monarch !== null ? member.monarch : "ไม่ปรากฏ",
                                 คู่สมรส: member.wife !== null ? member.wife : "ไม่ปรากฏ",
@@ -462,10 +504,11 @@
                                 ละติจูด: member.latitude,
                                 ลองจิจูด: member.longitude,
                                 ppid: member.ppid,
-                                img: member.img ? member.img : '165-1655940_account-human-person-user-icon-username-png-icon.png',
+                                รูปภาพ: member.img ? member.img : '165-1655940_account-human-person-user-icon-username-png-icon.png',
                                 วิกิพีเดีย: member.urlking !== null ? member.urlking : "ไม่ปรากฏ",
                                 url: member.url !== null ? member.url : "ไม่ปรากฏ",
                             };
+
                         });
 
 
@@ -480,6 +523,7 @@
                                 keyNavigation: false,
                                 filterBy: ['เพศ', 'ราชวงศ์'],
                                 editForm: {
+                                    photoBinding: 'รูปภาพ',
                                     buttons: {
                                         edit: null,
                                         share: null,
@@ -500,7 +544,7 @@
                                 nodeBinding: {
                                     field_0: "ชื่อ",
                                     field_1: "ตำแหน่ง",
-                                    img_0: "img",
+                                    img_0: "รูปภาพ",
                                 },
                                 tags: {
                                     male: {
@@ -648,7 +692,7 @@
             };
 
             const handleSearch = debounce(function (selectedName) {
-                const searchTerm = selectedName.toLowerCase(); // รับค่าชื่อที่ถูกคลิกแทนการพิมพ์
+                const searchTerm = selectedName.toLowerCase();
                 autoCompleteContainer.innerHTML = '';
 
                 if (searchTerm) {
@@ -661,26 +705,70 @@
                     if (matchedNode && matchedNode.ชื่อ.toLowerCase().includes('ครั้งที่')) {
                         matchedNode.tags = ['searched'];
 
+                        // ค้นหาพ่อแม่ชั้นแรก
                         const firstParentNode = allNodes.find(node => node.id === matchedNode.pid);
                         let secondParentNode;
+                        let grandparents = []; // เก็บปู่ย่าตายาย (พ่อแม่ของพ่อแม่)
+                        let grandparentPartners = [];
+
                         if (firstParentNode) {
+                            // ค้นหาพ่อแม่ชั้นที่สอง (ปู่ย่าตายาย)
                             secondParentNode = allNodes.find(node => node.id === firstParentNode.pid);
+                            if (secondParentNode) {
+                                // ค้นหาปู่ย่าตายาย (พ่อแม่ของ secondParentNode)
+                                grandparents = allNodes.filter(node => node.id === secondParentNode.pid);
+
+                                // ค้นหา partner ของปู่ย่าตายาย
+                                grandparentPartners = grandparents.flatMap(grandparent =>
+                                    allNodes.filter(node => node.pid === grandparent.id && node.tags && node.tags.includes('partner'))
+                                );
+                            }
                         }
 
-                        const nodesToLoad = [matchedNode];
-                        if (firstParentNode) nodesToLoad.push(firstParentNode);
-                        if (secondParentNode) nodesToLoad.push(secondParentNode);
+                        // ค้นหาลูกหลานของพ่อแม่ชั้นแรก
+                        const parentDescendants = findDescendants(firstParentNode ? firstParentNode.id : null, allNodes);
+                        const secondParentDescendants = findDescendants(secondParentNode ? secondParentNode.id : null, allNodes);
 
+                        // ค้นหาลูกหลานของโหนดที่ค้นหา
                         const descendants = findDescendants(matchedNode.id, allNodes);
                         const grandchildren = descendants.flatMap(descendant => findDescendants(descendant.id, allNodes));
 
-                        const partners = [...descendants, ...grandchildren].flatMap(descendant =>
-                            allNodes.filter(node => node.pid === descendant.id && node.tags && node.tags.includes('partner'))
+                        // ค้นหา partner ของโหนดปัจจุบัน, พ่อแม่, ลูกหลาน และหลาน
+                        const partners = [
+                            matchedNode,
+                            ...parentDescendants,
+                            ...secondParentDescendants,
+                            ...descendants,
+                            ...grandchildren
+                        ].flatMap(node =>
+                            allNodes.filter(partner => partner.pid === node.id && partner.tags && partner.tags.includes('partner'))
                         );
 
-                        chart.load([...new Set([...nodesToLoad, ...descendants, ...grandchildren, ...partners])]);
+                        // เพิ่ม partner ของโหนดที่ค้นหา
+                        const matchedNodePartner = allNodes.find(node => node.pid === matchedNode.id && node.tags && node.tags.includes('partner'));
+                        if (matchedNodePartner) {
+                            partners.push(matchedNodePartner);
+                        }
+
+                        // โหนดทั้งหมดที่จะโหลด: โหนดปัจจุบัน, พ่อแม่ 2 ชั้น, ลูกหลาน, หลาน, partner ที่เกี่ยวข้อง และ partner ของปู่ย่าตายาย
+                        const nodesToLoad = [
+                            matchedNode,
+                            ...parentDescendants,
+                            ...secondParentDescendants,
+                            ...descendants,
+                            ...grandchildren,
+                            ...partners,
+                            ...grandparents,
+                            ...grandparentPartners
+                        ];
+
+                        if (firstParentNode) nodesToLoad.push(firstParentNode);
+                        if (secondParentNode) nodesToLoad.push(secondParentNode);
+
+                        chart.load([...new Set(nodesToLoad)]);
 
                     } else {
+                        // กรณีค้นหาโหนดที่ไม่มีคำว่า "ครั้งที่"
                         if (matchedNode && matchedNode.pid) {
                             const parentNode = allNodes.find(node => node.id === matchedNode.pid);
                             if (parentNode) {
@@ -712,6 +800,7 @@
                 }
             }, 150);
 
+
             // ฟังก์ชันแสดงคำแนะนำ (จะเรียกเมื่อผู้ใช้พิมพ์)
             function showSuggestions(searchTerm) {
                 autoCompleteContainer.innerHTML = '';
@@ -737,7 +826,7 @@
                         suggestionItem.classList.add('suggestion-item');
 
                         const img = document.createElement('img');
-                        img.src = node.img ? node.img : 'default_image.jpg';
+                        img.src = node.รูปภาพ ? node.รูปภาพ : 'default_image.jpg';
                         img.alt = node.ชื่อ;
                         img.style.width = '30px';
                         img.style.height = '30px';
