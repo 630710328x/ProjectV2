@@ -95,7 +95,7 @@ try {
         } elseif ($inputYear !== null) {
             // Normal or "ก่อน ร.ศ." search logic
             $stmt = $pdo->prepare("
-                SELECT latitude, longitude, name, kingdomname, url, imgplace, reignstart, reignend, after, before, relationship 
+                SELECT latitude, longitude, name, kingdomname, url, urlking, imgplace, reignstart, reignend, after, before, relationship 
                 FROM $table 
                 WHERE (:year BETWEEN reignstart AND reignend)
                 OR (:year = reignstart)
