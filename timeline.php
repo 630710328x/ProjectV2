@@ -577,10 +577,10 @@ pg_close($conn);
             function renderVerticalLines(minYear, maxYear) {
                 const existingLines = document.querySelectorAll('.vertical-line');
                 existingLines.forEach(line => line.remove());
-
+                let firstYear = minYear - (minYear % 10);
                 const yearInterval = 100; // ระยะห่างระหว่างเส้นปี
 
-                for (let year = minYear; year <= maxYear; year += yearInterval) {
+                for (let year = firstYear; year <= maxYear; year += yearInterval) {
                     const positionLeft = getPositionLeft(year, minYear);
 
                     const lineDiv = document.createElement('div');
@@ -606,18 +606,22 @@ pg_close($conn);
                 const yearContainer = document.createElement('div');
                 yearContainer.classList.add('year-labels');
 
-                const yearInterval = 100; // ระยะห่างระหว่างปี
+                // คำนวณปีเริ่มต้นให้ลงท้ายด้วย 0 โดยการลบเศษ
+                let firstYear = minYear - (minYear % 10);  // ใช้การลบเศษจาก 10 เพื่อหาค่าปีที่ลงท้ายด้วย 0
 
-                for (let year = minYear; year <= maxYear; year += yearInterval) {
-                    const positionLeft = getPositionLeft(year, minYear);
+                // ตั้งระยะการแสดงผลของปีเป็นทุกๆ 10 ปี
+                const yearInterval = 100;
+
+                for (let year = firstYear; year <= maxYear; year += yearInterval) {
+                    const positionLeft = getPositionLeft(year, minYear);  // คำนวณตำแหน่งจาก firstYear และ minYear
 
                     const yearDiv = document.createElement('div');
-                    yearDiv.textContent = formatYear(year);
+                    yearDiv.textContent = formatYear(year);  // ใช้ฟังก์ชัน formatYear ในการแสดงผลปี
                     yearDiv.style.left = `${positionLeft}px`;
-                    yearDiv.style.transform = 'translateX(-50%)';
+                    yearDiv.style.transform = 'translateX(-50%)';  // จัดปีให้อยู่ตรงกลาง
                     yearDiv.style.fontWeight = 'bold';
                     yearDiv.style.fontSize = '14px';
-                    yearDiv.style.borderLeft = '2px dashed #bbb';
+                    yearDiv.style.borderLeft = '2px dashed #bbb';  // เส้นแบ่งระหว่างปี
                     yearDiv.style.paddingLeft = '5px';
 
                     yearContainer.appendChild(yearDiv);
@@ -625,6 +629,7 @@ pg_close($conn);
 
                 timelineWrapper.insertBefore(yearContainer, timelineWrapper.firstChild);
             }
+
 
             function getPositionLeft(year, minYear) {
                 const offsetFromKingdomLabel = 200; // ระยะห่างจากป้ายชื่ออาณาจักร
