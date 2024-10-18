@@ -451,7 +451,15 @@
                             throw new Error('Invalid data format');
                         }
                         // จัดเรียงโหนดตาม id
-                        familyData.sort((a, b) => a.id - b.id);
+                        familyData.sort((a, b) => {
+                            if (a.birth === null && b.birth === null) {
+                                return a.id - b.id; // If both birth years are null, sort by id
+                            }
+                            if (a.birth === null) return 1; // Push nodes with null birth to the end
+                            if (b.birth === null) return -1;
+                            return a.birth - b.birth; // Otherwise, sort by birth year
+                        });
+
                         allNodes = familyData.map(member => {
                             let tags = [];
 
