@@ -398,9 +398,19 @@
             OrgChart.templates.female = Object.assign({}, OrgChart.templates.ana);
             OrgChart.templates.female.node = '<rect x="0" y="0" height="110" width="250" fill="#FFB6C1" stroke-width="2" stroke="#000000" rx="15" ry="15"></rect>';
 
-            // Define custom template for searched node
-            OrgChart.templates.searched = Object.assign({}, OrgChart.templates.ana);
-            OrgChart.templates.searched.node = '<rect x="0" y="0" height="110" width="250" fill="#FFD700" stroke-width="2" stroke="#000000" rx="15" ry="15"></rect>';
+            OrgChart.templates.searchedfemale = Object.assign({}, OrgChart.templates.ana);
+            OrgChart.templates.searchedfemale.node = `
+  <rect x="0" y="0" height="110" width="250" fill="#FFB6C1" stroke-width="4" stroke="#FF0000" rx="15" ry="15"></rect>
+  <image x="70" y="0" width="100" height="100" xlink:href="pngtree-crown-crown-pattern-headwear-accessories-png-image_389135-removebg-preview.png" />
+  <text data-width="230" data-text-overflow="ellipsis" style="font-size: 20px;" fill="#000000" x="125" y="100" text-anchor="middle"></text>
+`;
+
+            OrgChart.templates.searchedmale = Object.assign({}, OrgChart.templates.ana);
+            OrgChart.templates.searchedmale.node = `
+  <rect x="0" y="0" height="110" width="250" fill="#87CEFA" stroke-width="4" stroke="#FF0000" rx="15" ry="15"></rect>
+  <image x="70" y="0" width="100" height="100" xlink:href="pngtree-crown-crown-pattern-headwear-accessories-png-image_389135-removebg-preview.png" />
+  <text data-width="230" data-text-overflow="ellipsis" style="font-size: 20px;" fill="#000000" x="125" y="100" text-anchor="middle"></text>
+`;
 
             OrgChart.templates.kingmale = Object.assign({}, OrgChart.templates.ana);
             OrgChart.templates.kingmale.node = `
@@ -559,8 +569,11 @@
                                     kingfemale: {
                                         template: "kingfemale"
                                     },
-                                    searched: {
-                                        template: "searched" // Custom template for searched nodes
+                                    searchedmale: {
+                                        template: "searchedmale" // Custom template for searched nodes
+                                    },
+                                    searchedfemale: {
+                                        template: "searchedfemale" // Custom template for searched nodes
                                     }
                                 },
                                 template: "ana",
@@ -703,7 +716,14 @@
                     let displayNode = matchedNode; // โหนดที่จะถูกแสดงในแผนภูมิครอบครัว
 
                     if (matchedNode && matchedNode.ชื่อ.toLowerCase().includes('ครั้งที่')) {
-                        matchedNode.tags = ['searched'];
+                        // Apply gender-based tags and check for partner
+                        let tags = matchedNode.tags && matchedNode.tags.includes('partner') ? ['partner'] : [];
+                        if (matchedNode.เพศ === 'หญิง') {
+                            tags.push('searchedfemale');
+                        } else if (matchedNode.เพศ === 'ชาย') {
+                            tags.push('searchedmale');
+                        }
+                        matchedNode.tags = tags;
 
                         // ค้นหาพ่อแม่ชั้นแรก
                         const firstParentNode = allNodes.find(node => node.id === matchedNode.pid);
@@ -791,7 +811,15 @@
                             partners.push(partnerNode);
                         }
 
-                        matchedNode.tags = matchedNode.tags.includes('partner') ? ['searched', 'partner'] : ['searched'];
+                        // Apply gender-based tags and check for partner
+                        let tags = matchedNode.tags && matchedNode.tags.includes('partner') ? ['partner'] : [];
+                        if (matchedNode.เพศ === 'หญิง') {
+                            tags.push('searchedfemale');
+                        } else if (matchedNode.เพศ === 'ชาย') {
+                            tags.push('searchedmale');
+                        }
+                        matchedNode.tags = tags;
+
                         const nodesToLoad = [displayNode, ...descendants, ...partners];
                         chart.load([...new Set(nodesToLoad)]);
                     }
@@ -799,6 +827,7 @@
                     chart.load(allNodes); // โหลดโหนดทั้งหมดหากไม่มีคำค้นหา
                 }
             }, 150);
+
 
 
             // ฟังก์ชันแสดงคำแนะนำ (จะเรียกเมื่อผู้ใช้พิมพ์)
