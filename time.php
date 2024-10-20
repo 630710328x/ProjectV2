@@ -200,19 +200,13 @@ pg_close($conn);
             max-width: 1200px;
             margin: 20px auto;
             position: relative;
-            overflow-x: auto;
-            /* เปิดการเลื่อนแนวนอน */
-            overflow-y: auto;
-            /* เปิดการเลื่อนแนวตั้ง */
-            border: 2px solid #ddd;
+            overflow-x: scroll;
+            border: 3px solid #0288d1;
             padding: 20px;
-            background-color: white;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            border-radius: 10px;
-            width: auto;
-            min-width: 100%;
+            background-color: #ffffff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 15px;
             height: 600px;
-            /* กำหนดความสูงเพื่อให้สามารถเลื่อนแนวตั้งได้ */
         }
 
 
@@ -230,7 +224,6 @@ pg_close($conn);
             margin-bottom: 50px;
             position: relative;
             padding-bottom: 20px;
-            border-bottom: 2px solid #ffcc00;
             padding-left: 20px;
             /* Add padding to the left */
         }
@@ -276,7 +269,7 @@ pg_close($conn);
         }
 
         .timeline-content {
-            color: white;
+            color: black;
             padding: 15px;
             border-radius: 10px;
             width: 300px;
@@ -497,13 +490,20 @@ pg_close($conn);
                                         <button class="close-btn"
                                             onclick="closeContent('<?php echo $kingdom . '-' . $item['id']; ?>')">ปิด</button>
                                         <h3><?php echo $item['name']; ?></h3>
-                                        <p>Reign: <?php echo $startYear . ' - ' . $endYear; ?></p>
+                                        <p>ครองราชย์:
+                                            <?php
+                                            echo ($item['reignstart'] !== null ? 'ค.ศ. ' . $item['reignstart'] : 'ไม่ปรากฏ');
+                                            echo ' - ';
+                                            echo ($item['reignend'] !== null ? 'ค.ศ. ' . $item['reignend'] : 'ไม่ปรากฏ');
+                                            ?>
+                                        </p>
 
                                         <!-- ปุ่มสำหรับการนำทางไปที่ family_tree.php -->
                                         <button class="search-btn"
                                             onclick="searchFamilyTree('<?php echo $item['name']; ?>', '<?php echo $item['id']; ?>', '<?php echo $kingdom; ?>')">แสดงหน้า
                                             Family Tree</button>
                                     </div>
+
 
                                 </div>
                             <?php endforeach; ?>
@@ -649,7 +649,7 @@ pg_close($conn);
                 document.querySelectorAll('.timeline-item').forEach(item => {
                     const circle = item.querySelector('.circle');
                     const reignstart = parseInt(circle.dataset.reignstart);
-                    const reignend = parseInt(circle.dataset.reignend);
+                    const reignend = circle.dataset.reignend ? parseInt(circle.dataset.reignend) : null;
 
                     // คำนวณปีใหม่
                     let newStartYear = reignstart;
@@ -657,22 +657,22 @@ pg_close($conn);
 
                     if (format === 'AD') {
                         newStartYear = reignstart - 543;
-                        newEndYear = reignend ? reignend - 543 : "ไม่ปรากฏ";
+                        newEndYear = reignend !== null ? reignend - 543 : null;
                     } else if (format === 'RS') {
                         newStartYear = reignstart - 2324;
-                        newEndYear = reignend ? reignend - 2324 : "ไม่ปรากฏ";
+                        newEndYear = reignend !== null ? reignend - 2324 : null;
                     }
 
-                    // แสดงเฉพาะตัวเลขในโหนด โดยไม่ต้องใส่คำว่า พ.ศ. ค.ศ. หรือ รศ.
-                    circle.textContent = Math.abs(newStartYear); // แสดงปีในโหนดเฉพาะตัวเลข
+                    // แสดงเฉพาะตัวเลขในโหนด
+                    circle.textContent = Math.abs(newStartYear);
 
                     const reignEndText = item.querySelector('.timeline-content p');
 
-                    // แสดงข้อความในรูปแบบที่เหมาะสมในส่วน content
                     const suffixStart = format === 'AD' ? christianEraSuffix : (format === 'RS' ? (newStartYear < 0 ? beforeRattanakosinEraSuffix : rattanakosinEraSuffix) : buddhistEraSuffix);
                     const suffixEnd = format === 'AD' ? christianEraSuffix : (format === 'RS' ? (newEndYear < 0 ? beforeRattanakosinEraSuffix : rattanakosinEraSuffix) : buddhistEraSuffix);
 
-                    reignEndText.textContent = `ครองราชย์: ${suffixStart} ${Math.abs(newStartYear)} - ${suffixEnd} ${Math.abs(newEndYear)}`;
+                    // แสดงข้อความในรูปแบบที่เหมาะสมในส่วน content
+                    reignEndText.textContent = `ครองราชย์: ${suffixStart} ${Math.abs(newStartYear)} - ${newEndYear !== null ? `${suffixEnd} ${Math.abs(newEndYear)}` : 'ไม่ปรากฏ'}`;
                 });
             }
 
