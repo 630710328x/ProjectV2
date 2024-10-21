@@ -206,7 +206,7 @@ pg_close($conn);
             background-color: #ffffff;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             border-radius: 15px;
-            height: auto;
+            height: 600px;
         }
 
 
@@ -216,57 +216,39 @@ pg_close($conn);
             display: flex;
             flex-direction: column;
             align-items: center;
-            margin-left: 400px;
+            margin-left: 200px;
             /* Add margin to move the circle away from the edge */
         }
 
         .kingdom-section {
+            margin-bottom: 50px;
             position: relative;
+            padding-bottom: 20px;
             padding-left: 20px;
             /* Add padding to the left */
         }
 
-        .kingdom-divider {
-            height: 2px;
-            /* ความสูงของเส้น */
-            background-color: #000;
-            /* สีของเส้น */
-            margin: 30px 0;
-            /* ระยะห่างจากเนื้อหาก่อนหน้าและหลัง */
-            position: relative;
-            z-index: 1;
-            /* ระดับลำดับที่ต่ำกว่าไอเท็ม */
-        }
 
         .kingdom-title {
-            font-size: 18px;
-            /* ลดขนาดฟอนต์จาก 24px เป็น 18px */
+            font-size: 24px;
             font-weight: bold;
-            margin-bottom: 5px;
-            /* ลดระยะห่าง */
+            margin-bottom: 10px;
             text-transform: capitalize;
             color: #000;
         }
 
         .timeline-items {
             position: relative;
-            height: 60px;
-            /* ลดความสูงจาก 100px เป็น 60px */
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            /* ทำให้โหนดอยู่ข้างหน้าเส้น */
+            height: 100px;
         }
 
         .timeline-item {
             position: absolute;
-            top: 10px;
-            /* ปรับตำแหน่งให้ใกล้ขอบบนขึ้น */
+            top: 20px;
             display: flex;
             flex-direction: column;
             align-items: center;
         }
-
 
         .circle {
             background-color: #444;
@@ -295,7 +277,7 @@ pg_close($conn);
             top: 60px;
             display: none;
             text-align: center;
-            z-index: 10;
+            z-index: 1;
         }
 
         .close-btn {

@@ -300,7 +300,7 @@ try {
             <ul>
                 <li><a href="index.php" class="active">Map</a></li>
                 <li><a href="family_tree.php">Family Tree</a></li>
-                <li><a href="timeline.php">Timeline</a></li>
+                <li><a href="time.php">Timeline</a></li>
             </ul>
         </nav>
     </header>

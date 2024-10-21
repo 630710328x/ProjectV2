@@ -266,7 +266,7 @@
             <ul>
                 <li><a href="index.php">Map</a></li>
                 <li><a href="family_tree.php" class="active">Family Tree</a></li>
-                <li><a href="timeline.php">Timeline</a></li>
+                <li><a href="time.php">Timeline</a></li>
             </ul>
         </nav>
     </header>
