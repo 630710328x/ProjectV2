@@ -206,7 +206,7 @@ pg_close($conn);
             background-color: #ffffff;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             border-radius: 15px;
-            height: 600px;
+            height: auto;
         }
 
 
@@ -216,56 +216,75 @@ pg_close($conn);
             display: flex;
             flex-direction: column;
             align-items: center;
-            margin-left: 200px;
+            margin-left: 400px;
             /* Add margin to move the circle away from the edge */
         }
 
         .kingdom-section {
-            margin-bottom: 50px;
             position: relative;
-            padding-bottom: 20px;
             padding-left: 20px;
             /* Add padding to the left */
         }
 
+        .kingdom-divider {
+            height: 2px;
+            /* ความสูงของเส้น */
+            background-color: #000;
+            /* สีของเส้น */
+            margin: 30px 0;
+            /* ระยะห่างจากเนื้อหาก่อนหน้าและหลัง */
+            position: relative;
+            z-index: 1;
+            /* ระดับลำดับที่ต่ำกว่าไอเท็ม */
+        }
 
         .kingdom-title {
-            font-size: 24px;
+            font-size: 22px;
+            /* ลดขนาดฟอนต์จาก 24px เป็น 18px */
             font-weight: bold;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
+            /* ลดระยะห่าง */
             text-transform: capitalize;
             color: #000;
         }
 
         .timeline-items {
             position: relative;
-            height: 100px;
+            height: 20px;
+            /* ลดความสูงจาก 100px เป็น 60px */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            /* ทำให้โหนดอยู่ข้างหน้าเส้น */
         }
 
         .timeline-item {
             position: absolute;
-            top: 20px;
+            top: 10px;
+            /* ปรับตำแหน่งให้ใกล้ขอบบนขึ้น */
             display: flex;
             flex-direction: column;
             align-items: center;
         }
 
+
         .circle {
             background-color: #444;
             color: black;
             border-radius: 50%;
-            width: 50px;
-            height: 50px;
+            width: 30px;
+            height: 30px;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 16px;
+            font-size: 14px;
             font-weight: bold;
             text-align: center;
-            line-height: 50px;
+            line-height: 30px;
             cursor: pointer;
             margin-bottom: 10px;
             transition: all 0.3s ease;
+            border: 2px solid black;
         }
 
         .timeline-content {
@@ -277,7 +296,43 @@ pg_close($conn);
             top: 60px;
             display: none;
             text-align: center;
-            z-index: 1;
+            /* จัดกึ่งกลางข้อความทั้งหมด */
+            z-index: 10;
+            line-height: 1.6;
+            /* เพิ่มระยะห่างระหว่างบรรทัดเพื่อให้อ่านง่ายขึ้น */
+            font-size: 16px;
+            /* ขนาดตัวอักษรที่เหมาะสม */
+        }
+
+        .timeline-content h3 {
+            font-size: 18px;
+            margin-bottom: 10px;
+            /* เพิ่มระยะห่างระหว่างหัวข้อกับเนื้อหา */
+        }
+
+        .timeline-content p {
+            margin-bottom: 15px;
+            /* เพิ่มระยะห่างระหว่างข้อความและปุ่ม */
+        }
+
+        .timeline-content .search-btn {
+            padding: 8px 15px;
+            /* ปรับขนาดปุ่ม */
+            font-size: 14px;
+            /* ขนาดตัวอักษรในปุ่ม */
+            background-color: #e6eaf0;
+            /* สีพื้นหลังของปุ่ม */
+            color: black;
+            /* สีตัวอักษร */
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .timeline-content .search-btn:hover {
+            background-color: #666666;
+            /* เปลี่ยนสีปุ่มเมื่อ hover */
         }
 
         .close-btn {
@@ -478,57 +533,83 @@ pg_close($conn);
                         </div>
                         <div class="timeline-items">
                             <div class="timeline-line"></div>
-                            <?php
-                            $previousEndPosition = -100; // ตำแหน่งเริ่มต้นสำหรับการตรวจสอบการทับซ้อน
-                            $currentTopPosition = 0; // เริ่มต้นที่ตำแหน่งบนสุด
-                        
-                            foreach ($items as $item):
-                                // คำนวณตำแหน่งตามปีที่เริ่มครองราชย์ (reignstart)
-                                $startYear = $item['reignstart'];
-                                $endYear = $item['reignend'];
-                                $position = ($startYear - $minYear) * 30; // ตำแหน่งที่ต้องการให้ตรงกับ year-label
-                                // ตรวจสอบการทับซ้อน
-                                if ($position < $previousEndPosition + 60) {
-                                    $currentTopPosition += 60;
-                                } else {
-                                    $currentTopPosition = 0;
-                                }
-                                $previousEndPosition = $position;
-                                ?>
-                                <div class="timeline-item"
-                                    style="left: <?php echo $position; ?>px; top: <?php echo $currentTopPosition; ?>px;">
-                                    <div class="circle" data-id="<?php echo $item['id']; ?>"
-                                        data-kingdom="<?php echo $kingdom; ?>"
-                                        style="background-color: <?php echo $kingdomColors[$kingdom]; ?>;"
-                                        onclick="toggleContent('<?php echo $item['id']; ?>', '<?php echo $kingdom; ?>')"
-                                        data-reignstart="<?php echo $startYear; ?>" data-reignend="<?php echo $endYear; ?>">
-                                        <?php echo $startYear; ?>
+
+                            <!-- แสดงข้อมูลที่ reignstart IS NULL ก่อน -->
+                            <?php foreach ($items as $item): ?>
+                                <?php if ($item['reignstart'] === null): ?>
+                                    <div class="timeline-item" style="left: -340px; top: 0px;">
+                                        <!-- ตั้งค่า left ให้เป็น 0 และกำหนดค่า top -->
+                                        <div class="circle" data-id="<?php echo $item['id']; ?>"
+                                            data-kingdom="<?php echo $kingdom; ?>"
+                                            style="background-color: <?php echo $kingdomColors[$kingdom]; ?>;"
+                                            onclick="toggleContent('<?php echo $item['id']; ?>', '<?php echo $kingdom; ?>')"
+                                            data-reignstart="null" data-reignend="<?php echo $item['reignend']; ?>">
+                                            <!-- ไม่แสดงข้อความใดๆ ในวงกลม -->
+                                        </div>
+                                        <div class="timeline-content" id="content-<?php echo $kingdom . '-' . $item['id']; ?>">
+                                            <button class="close-btn"
+                                                onclick="closeContent('<?php echo $kingdom . '-' . $item['id']; ?>')">ปิด</button>
+                                            <h3><?php echo $item['name']; ?></h3>
+                                            <p>ครองราชย์:
+                                                <?php if ($item['reignstart'] === null): ?>
+                                                    ไม่ปรากฏ
+                                                <?php endif; ?>
+                                                <?php if ($item['reignend'] !== null): ?>
+                                                    - ค.ศ. <?php echo $item['reignend']; ?>
+                                                <?php else: ?>
+                                                    - ไม่ปรากฏ
+                                                <?php endif; ?>
+                                            </p>
+                                            <button class="search-btn"
+                                                onclick="searchFamilyTree('<?php echo $item['name']; ?>', '<?php echo $item['id']; ?>', '<?php echo $kingdom; ?>')">แสดงหน้า
+                                                Family Tree</button>
+                                        </div>
                                     </div>
-                                    <div class="timeline-content" id="content-<?php echo $kingdom . '-' . $item['id']; ?>">
-                                        <button class="close-btn"
-                                            onclick="closeContent('<?php echo $kingdom . '-' . $item['id']; ?>')">ปิด</button>
-                                        <h3><?php echo $item['name']; ?></h3>
-                                        <p>ครองราชย์:
-                                            <?php
-                                            echo ($item['reignstart'] !== null ? 'ค.ศ. ' . $item['reignstart'] : 'ไม่ปรากฏ');
-                                            echo ' - ';
-                                            echo ($item['reignend'] !== null ? 'ค.ศ. ' . $item['reignend'] : 'ไม่ปรากฏ');
-                                            ?>
-                                        </p>
-
-                                        <!-- ปุ่มสำหรับการนำทางไปที่ family_tree.php -->
-                                        <button class="search-btn"
-                                            onclick="searchFamilyTree('<?php echo $item['name']; ?>', '<?php echo $item['id']; ?>', '<?php echo $kingdom; ?>')">แสดงหน้า
-                                            Family Tree</button>
-                                    </div>
-
-
-                                </div>
+                                <?php endif; ?>
                             <?php endforeach; ?>
+
+
+                            <!-- แสดงข้อมูลที่ reignstart IS NOT NULL ต่อท้าย -->
+                            <?php foreach ($items as $item): ?>
+                                <?php if ($item['reignstart'] !== null): ?>
+                                    <?php
+                                    $startYear = $item['reignstart'];
+                                    $endYear = $item['reignend'];
+                                    $position = ($startYear - $minYear) * 30; // คำนวณตำแหน่งตามปีที่เริ่มครองราชย์
+                                    ?>
+                                    <div class="timeline-item" style="left: <?php echo $position; ?>px; top: 0;">
+                                        <div class="circle" data-id="<?php echo $item['id']; ?>"
+                                            data-kingdom="<?php echo $kingdom; ?>"
+                                            style="background-color: <?php echo $kingdomColors[$kingdom]; ?>;"
+                                            onclick="toggleContent('<?php echo $item['id']; ?>', '<?php echo $kingdom; ?>')"
+                                            data-reignstart="<?php echo $startYear; ?>" data-reignend="<?php echo $endYear; ?>">
+                                            <?php echo $startYear; ?>
+                                        </div>
+                                        <div class="timeline-content" id="content-<?php echo $kingdom . '-' . $item['id']; ?>">
+                                            <button class="close-btn"
+                                                onclick="closeContent('<?php echo $kingdom . '-' . $item['id']; ?>')">ปิด</button>
+                                            <h3><?php echo $item['name']; ?></h3>
+                                            <p>ครองราชย์:
+                                                <?php
+                                                echo ($item['reignstart'] !== null ? 'ค.ศ. ' . $item['reignstart'] : 'ไม่ปรากฏ');
+                                                echo ' - ';
+                                                echo ($item['reignend'] !== null ? 'ค.ศ. ' . $item['reignend'] : 'ไม่ปรากฏ');
+                                                ?>
+                                            </p>
+                                            <button class="search-btn"
+                                                onclick="searchFamilyTree('<?php echo $item['name']; ?>', '<?php echo $item['id']; ?>', '<?php echo $kingdom; ?>')">แสดงหน้า
+                                                Family Tree</button>
+                                        </div>
+                                    </div>
+                                <?php endif; ?>
+                            <?php endforeach; ?>
+
+
                         </div>
                         <div class="kingdom-divider"></div>
                     </div>
                 <?php endforeach; ?>
+
             </div>
         </div>
 

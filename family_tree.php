@@ -458,14 +458,7 @@
                             if (a.birth === null) return 1; // Push nodes with null birth to the end
                             if (b.birth === null) return -1;
                             return a.birth - b.birth; // Otherwise, sort by birth year
-                        });
-                        // จัดเรียงโหนดที่มี partner ตาม id ก่อน
-                        familyData.sort((a, b) => {
-                            if (a.tags.includes('partner') && b.tags.includes('partner')) {
-                                return a.id - b.id; // จัดเรียง partner ตาม id จากซ้ายไปขวา
-                            }
-                            return 0; // ไม่จัดเรียงโหนดที่ไม่ใช่ partner
-                        });
+                        });      
 
                         allNodes = familyData.map(member => {
                             let tags = [];
